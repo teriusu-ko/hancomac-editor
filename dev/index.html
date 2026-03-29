@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@hancomac/editor Dev</title>
+  <style>
+    :root {
+      --background: #ffffff;
+      --foreground: #2d3748;
+      --primary: #4A7DAC;
+      --primary-foreground: #ffffff;
+      --muted: #f7fafc;
+      --muted-foreground: #718096;
+      --border: #e2e8f0;
+      --popover: #ffffff;
+      --popover-foreground: #2d3748;
+      --accent: #50A464;
+      --accent-foreground: #ffffff;
+      --destructive: #FF6B6B;
+      --ring: #4A7DAC;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: "Noto Sans KR", sans-serif;
+      background: #f1f5f9;
+      padding: 2rem;
+      color: var(--foreground);
+    }
+    #root { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--foreground); }
+    .output { margin-top: 1.5rem; }
+    .output summary { font-weight: 600; cursor: pointer; margin-bottom: 0.5rem; }
+    .output pre {
+      background: #1e293b; color: #e2e8f0; padding: 1rem;
+      border-radius: 8px; overflow-x: auto; font-size: 0.8rem;
+      max-height: 300px; white-space: pre-wrap; word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="./main.tsx"></script>
+</body>
+</html>

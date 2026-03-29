@@ -16,6 +16,7 @@ import {
   LinkIcon,
   Table as TableIcon,
   FileText,
+  Youtube,
 } from "lucide-react";
 import type { SlashMenuItem } from "../types";
 
@@ -99,6 +100,15 @@ export const SLASH_MENU_ITEMS: SlashMenuItem[] = [
         .run(),
   },
   {
+    label: "YouTube 영상",
+    keywords: "youtube video 영상 동영상 유튜브",
+    icon: <Youtube size={SI} />,
+    command: (editor) => {
+      const url = window.prompt("YouTube URL을 입력하세요");
+      if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    },
+  },
+  {
     label: "이미지",
     keywords: "image 이미지 사진 img",
     icon: <ImageIcon size={SI} />,
@@ -173,8 +183,8 @@ export function SlashCommandMenu({
       } else if (e.key === "Enter") {
         e.preventDefault();
         if (filtered[selectedIndex]) {
-          filtered[selectedIndex].command(editor);
           onClose();
+          filtered[selectedIndex].command(editor);
         }
       } else if (e.key === "Escape") {
         e.preventDefault();
@@ -196,7 +206,7 @@ export function SlashCommandMenu({
     return (
       <div
         ref={menuRef}
-        className="z-50 bg-popover border border-border rounded-lg shadow-lg p-2 w-56"
+        className="z-50 bg-popover border border-border rounded-lg shadow-lg p-2" style={{ width: "180px" }}
       >
         <p className="text-xs text-muted-foreground px-2 py-1">결과 없음</p>
       </div>
@@ -206,7 +216,7 @@ export function SlashCommandMenu({
   return (
     <div
       ref={menuRef}
-      className="z-50 bg-popover border border-border rounded-lg shadow-lg w-56 max-h-72 overflow-y-auto py-1"
+      className="z-50 bg-popover border border-border rounded-lg shadow-lg overflow-y-auto py-1" style={{ width: "180px", maxHeight: "200px" }}
     >
       <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 py-1.5">
         블록
@@ -216,18 +226,18 @@ export function SlashCommandMenu({
           key={item.label}
           type="button"
           data-index={i}
-          className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors rounded-md mx-0 ${
+          className={`w-full flex items-center gap-2 px-2 py-1.5 text-left transition-colors rounded-md mx-0 ${
             i === selectedIndex
               ? "bg-accent text-accent-foreground"
               : "hover:bg-muted text-foreground"
           }`}
           onMouseEnter={() => setSelectedIndex(i)}
           onClick={() => {
-            item.command(editor);
             onClose();
+            item.command(editor);
           }}
         >
-          <span className="flex items-center justify-center w-8 h-8 rounded-md border border-border bg-background text-muted-foreground shrink-0">
+          <span className="flex items-center justify-center w-6 h-6 rounded border border-border bg-background text-muted-foreground shrink-0">
             {item.icon}
           </span>
           <span className="text-sm font-medium">{item.label}</span>

@@ -36,6 +36,7 @@ import {
   CheckSquare,
   Superscript,
   Subscript,
+  Youtube,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../utils/cn";
@@ -157,7 +158,7 @@ export function FixedToolbar({ editor, onPdfClick }: FixedToolbarProps) {
   );
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-border bg-muted/30 backdrop-blur-sm rounded-t-xl">
+    <div className="sticky top-[74px] z-10 flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-border bg-background rounded-t-xl" style={{ top: "var(--header-height, 74px)" }}>
       {/* 서식 */}
       <Btn
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -309,6 +310,15 @@ export function FixedToolbar({ editor, onPdfClick }: FixedToolbarProps) {
       <Btn onClick={onPdfClick} title="PDF 삽입">
         <FileText size={iconSize} />
       </Btn>
+      <Btn
+        onClick={() => {
+          const url = window.prompt("YouTube URL을 입력하세요");
+          if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
+        }}
+        title="YouTube 영상"
+      >
+        <Youtube size={iconSize} />
+      </Btn>
 
       {/* 표 */}
       <div ref={tableMenuRef} className="relative">
@@ -327,7 +337,7 @@ export function FixedToolbar({ editor, onPdfClick }: FixedToolbarProps) {
           <ChevronDown size={12} />
         </button>
         {tableMenuOpen && (
-          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 min-w-[220px] py-1">
+          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 py-1" style={{ minWidth: "220px" }}>
             {!isInTable ? (
               <>
                 <TableMenuButton
@@ -492,7 +502,7 @@ export function FixedToolbar({ editor, onPdfClick }: FixedToolbarProps) {
           <ChevronDown size={12} />
         </button>
         {codeMenuOpen && (
-          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 min-w-[120px] py-1">
+          <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 py-1" style={{ minWidth: "130px" }}>
             <button
               type="button"
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
@@ -575,15 +585,43 @@ export function FixedToolbar({ editor, onPdfClick }: FixedToolbarProps) {
         />
       )}
       {modalState?.type === "cellBg" && (
-        <InputModal
-          title="셀 배경색 입력"
-          placeholder="#f3f4f6"
-          onConfirm={(color) => {
-            editor.chain().focus().setCellAttribute("backgroundColor", color).run();
-            setModalState(null);
-          }}
-          onCancel={() => setModalState(null)}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setModalState(null)}>
+          <div className="bg-popover border border-border rounded-xl shadow-lg p-4" style={{ minWidth: "240px" }} onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold mb-3">셀 배경색</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "없음", value: "" },
+                { label: "밝은 회색", value: "#f1f5f9" },
+                { label: "밝은 파랑", value: "#dbeafe" },
+                { label: "밝은 초록", value: "#dcfce7" },
+                { label: "밝은 노랑", value: "#fef9c3" },
+                { label: "밝은 주황", value: "#ffedd5" },
+                { label: "밝은 빨강", value: "#fee2e2" },
+                { label: "밝은 보라", value: "#ede9fe" },
+                { label: "밝은 분홍", value: "#fce7f3" },
+              ].map((c) => (
+                <button
+                  key={c.value || "none"}
+                  type="button"
+                  title={c.label}
+                  className="h-9 rounded-lg border border-border transition-transform hover:scale-105 flex items-center justify-center text-xs"
+                  style={{
+                    background: c.value || "#fff",
+                    backgroundImage: !c.value
+                      ? "linear-gradient(135deg, transparent 45%, #ef4444 45%, #ef4444 55%, transparent 55%)"
+                      : undefined,
+                  }}
+                  onClick={() => {
+                    editor.chain().focus().setCellAttribute("backgroundColor", c.value || null).run();
+                    setModalState(null);
+                  }}
+                >
+                  {c.value ? "" : ""}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
