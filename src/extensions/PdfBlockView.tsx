@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Trash2, ExternalLink } from "lucide-react";
 import { getPdfJs } from "../utils/pdf";
 
-export function PdfBlockView({ node, deleteNode }: ReactNodeViewProps) {
+export function PdfBlockView({ node, deleteNode, selected }: ReactNodeViewProps) {
   const src = node.attrs.src as string;
   const name = node.attrs.name as string;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -102,7 +102,10 @@ export function PdfBlockView({ node, deleteNode }: ReactNodeViewProps) {
 
   return (
     <NodeViewWrapper className="my-4" contentEditable={false} data-drag-handle>
-      <div className="border border-border rounded-lg overflow-hidden bg-muted/30">
+      <div className="border rounded-lg overflow-hidden bg-muted/30 transition-shadow" style={{
+        borderColor: selected ? "var(--primary)" : "var(--border)",
+        boxShadow: selected ? "0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent)" : "none",
+      }}>
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background">
           <span className="text-xs text-muted-foreground truncate max-w-[200px]">
             {name || "PDF 문서"}

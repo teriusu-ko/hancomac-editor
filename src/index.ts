@@ -6,6 +6,7 @@ export { BlockHandle } from "./components/BlockHandle";
 export { SlashCommandMenu, SLASH_MENU_ITEMS } from "./components/SlashCommandMenu";
 export { InputModal } from "./components/InputModal";
 export { PdfViewer } from "./components/PdfViewer";
+export { TableBubbleMenu } from "./components/TableBubbleMenu";
 
 // 익스텐션
 export { PdfBlock } from "./extensions/PdfBlock";

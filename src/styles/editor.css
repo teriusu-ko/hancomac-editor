@@ -16,6 +16,17 @@
   margin-left: 3rem;
 }
 
+/* 전체 너비 블록은 margin-left 제거 */
+.tiptap > .tableWrapper,
+.tiptap > table,
+.tiptap > div[data-type="pdfBlock"],
+.tiptap > [data-youtube-video],
+.tiptap > details,
+.tiptap > pre {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
 /* ── 텍스트 블록 ── */
 .tiptap p {
   margin: 0.25em 0;
@@ -67,21 +78,24 @@
 
 .tiptap ul[data-type="taskList"] li {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 0.5rem;
   margin: 0.25em 0;
 }
 
 .tiptap ul[data-type="taskList"] li > label {
   flex-shrink: 0;
-  margin-top: 0.3em;
+  display: flex;
+  align-items: center;
+  height: 1.8em;
 }
 
 .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
   accent-color: var(--primary);
-  width: 1em;
-  height: 1em;
+  width: 1.1em;
+  height: 1.1em;
   cursor: pointer;
+  margin: 0;
 }
 
 .tiptap ul[data-type="taskList"] li > div {
@@ -157,6 +171,22 @@
   height: auto;
   border-radius: 8px;
   margin: 0.75em 0;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* ── YouTube / PDF 선택 힌트 ── */
+.tiptap div[data-youtube-video].ProseMirror-selectednode iframe {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.tiptap [data-type="pdfBlock"].ProseMirror-selectednode > div {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: 8px;
 }
 
 /* ── 링크 ── */
@@ -177,24 +207,69 @@
   padding: 0.05em 0.1em;
 }
 
+/* ── 접기/펼치기 (Details) ── */
+.tiptap details {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5em 1em;
+  margin: 0.75em 0;
+  background: var(--background);
+}
+
+.tiptap details summary {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25em 0;
+  user-select: none;
+}
+
+.tiptap details summary::marker {
+  color: var(--muted-foreground);
+}
+
+.tiptap details[open] > *:not(summary) {
+  margin-top: 0.5em;
+}
+
+/* ── YouTube 임베드 ── */
+.tiptap div[data-youtube-video] {
+  margin: 1em 0;
+}
+
+.tiptap div[data-youtube-video] iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  border: none;
+}
+
+
 /* ── 테이블 ── */
 .tiptap table {
   border-collapse: collapse;
-  min-width: 100%;
   margin: 1em 0;
   table-layout: fixed;
-  border: 2px solid var(--table-border);
-  border-radius: 6px;
+  border: 2px solid var(--border);
+  max-width: 100% !important; /* TipTap 인라인 width를 넘지 않도록 */
+  overflow: hidden;
+}
+
+.tiptap .tableWrapper {
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .tiptap th,
 .tiptap td {
-  border: 1.5px solid var(--table-border);
+  border: 1px solid var(--border);
   padding: 0.6em 0.8em;
-  min-width: 80px;
-  vertical-align: top;
+  min-width: 60px;
+  vertical-align: middle;
   position: relative;
   box-sizing: border-box;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.0;
 }
 
 .tiptap th {
@@ -219,15 +294,20 @@
 
 .tiptap .column-resize-handle {
   position: absolute;
-  right: -2px;
+  right: -3px;
   top: 0;
-  bottom: -2px;
-  width: 4px;
+  bottom: 0;
+  width: 6px;
   background: var(--primary);
-  opacity: 0.6;
+  opacity: 0;
   cursor: col-resize;
   z-index: 20;
   border-radius: 2px;
+  transition: opacity 0.15s;
+}
+
+.tiptap table:hover .column-resize-handle {
+  opacity: 0.4;
 }
 
 .tiptap .column-resize-handle:hover {
@@ -240,7 +320,17 @@
 
 .tableWrapper {
   overflow-x: auto;
+  overflow-y: hidden;
   margin: 1em 0;
+  max-width: 100%;
+  padding-right: 4px; /* resize handle이 잘리지 않도록 */
+}
+
+/* 테이블 셀 내부 prosemirror 기본 컨트롤 숨기기 */
+.tiptap table .grip-column,
+.tiptap table .grip-row,
+.tiptap table .grip-table {
+  display: none !important;
 }
 
 /* ── 플레이스홀더 (Notion-style) ── */
@@ -303,7 +393,7 @@
 
 /* ── 선택 (텍스트) ── */
 .tiptap ::selection {
-  background-color: hsl(var(--primary) / 0.15);
+  background-color: color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 /* ── Node range selection (드래그 시) ── */
@@ -321,15 +411,37 @@
   position: relative;
 }
 
-.ProseMirror-selectednode::before,
+.ProseMirror-selectednode:not(img):not([data-youtube-video]):not([data-type="pdfBlock"])::before,
 .ProseMirror-selectednoderange::before {
   content: "";
   position: absolute;
   inset: -0.25rem;
-  background-color: hsl(var(--primary) / 0.1);
-  border-radius: 0.2rem;
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: 0.5rem;
   pointer-events: none;
   z-index: -1;
+}
+
+/* ── Floating + 버튼 ── */
+.hce-floating-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hce-floating-plus:hover {
+  color: var(--foreground);
+  border-color: var(--foreground);
+  background: var(--muted);
 }
 
 /* ── Drag handle ── */
@@ -377,4 +489,33 @@
 
 .hce-drag-handle__grip:active {
   cursor: grabbing;
+}
+
+/* ── 테이블 버블 메뉴 tooltip ── */
+.hce-table-btn-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.hce-table-btn-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #fff;
+  background: #1e293b;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+
+.hce-table-btn-wrap:hover .hce-table-btn-tooltip {
+  opacity: 1;
 }

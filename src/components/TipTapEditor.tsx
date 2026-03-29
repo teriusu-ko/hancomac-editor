@@ -24,29 +24,72 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+// Details 확장은 v3/v2 호환 문제로 비활성화
+import Youtube from "@tiptap/extension-youtube";
+import FileHandler from "@tiptap/extension-file-handler";
 import "highlight.js/styles/atom-one-dark.css";
 
+const cellAttrs = {
+  backgroundColor: {
+    default: null,
+    parseHTML: (element: HTMLElement) => element.style.backgroundColor || null,
+    renderHTML: (attributes: Record<string, unknown>) => {
+      const styles: string[] = [];
+      if (attributes.backgroundColor) styles.push(`background-color: ${attributes.backgroundColor}`);
+      if (attributes.lineHeight) styles.push(`line-height: ${attributes.lineHeight}`);
+      return styles.length ? { style: styles.join("; ") } : {};
+    },
+  },
+  lineHeight: {
+    default: null,
+    parseHTML: (element: HTMLElement) => element.style.lineHeight || null,
+    renderHTML: () => ({}),
+  },
+};
+
 const CustomTableCell = TableCell.extend({
-  addAttributes() {
+  addAttributes() { return { ...this.parent?.(), ...cellAttrs }; },
+});
+
+const CustomTableHeader = TableHeader.extend({
+  addAttributes() { return { ...this.parent?.(), ...cellAttrs }; },
+});
+
+import { Extension } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
+import { useEffect, useCallback, useState, useRef } from "react";
+
+/**
+ * 코드블록이 문서 맨 첫 노드일 때, 코드블록 맨 앞에서
+ * ArrowUp을 누르면 위에 빈 paragraph를 삽입하고 커서 이동.
+ * 표 등 다른 블록에는 적용하지 않음 (gapcursor가 처리).
+ */
+const CodeBlockTopEscape = Extension.create({
+  name: "codeBlockTopEscape",
+  addKeyboardShortcuts() {
     return {
-      ...this.parent?.(),
-      backgroundColor: {
-        default: null,
-        parseHTML: (element: HTMLElement) => element.style.backgroundColor || null,
-        renderHTML: (attributes: Record<string, unknown>) => {
-          if (!attributes.backgroundColor) return {};
-          return { style: `background-color: ${attributes.backgroundColor}` };
-        },
+      ArrowUp: () => {
+        const { state, view } = this.editor;
+        const { from } = state.selection;
+        const firstNode = state.doc.firstChild;
+        if (!firstNode) return false;
+        if (firstNode.type.name !== "codeBlock") return false;
+        // 커서가 코드블록 첫 줄에 있을 때만
+        const codeStart = 1; // doc(0) > codeBlock content starts at 1
+        if (from !== codeStart) return false;
+        const tr = state.tr.insert(0, state.schema.nodes.paragraph.create());
+        tr.setSelection(TextSelection.create(tr.doc, 1));
+        view.dispatch(tr);
+        return true;
       },
     };
   },
 });
-
-import { useEffect, useCallback, useState, useRef } from "react";
+// FloatingMenu는 레이아웃 이슈로 현재 비활성화 — 슬래시(/) 명령으로 대체
 import { PdfBlock } from "../extensions/PdfBlock";
 import { FixedToolbar } from "./FixedToolbar";
-import { BlockHandle } from "./BlockHandle";
 import { SlashCommandMenu } from "./SlashCommandMenu";
+import { TableBubbleMenu } from "./TableBubbleMenu";
 import type { UploadHandler } from "../types";
 
 const lowlight = createLowlight(common);
@@ -112,48 +155,60 @@ export function TipTapEditor({
       CharacterCount,
       Table.configure({ resizable: true, allowTableNodeSelection: true }),
       TableRow,
-      TableHeader,
+      CustomTableHeader,
       CustomTableCell,
       PdfBlock,
+      CodeBlockTopEscape,
+      Youtube.configure({ inline: false, allowFullscreen: true }),
+      ...(onUploadFile
+        ? [
+            FileHandler.configure({
+              allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"],
+              onDrop: (_currentEditor, files, pos) => {
+                for (const file of files) {
+                  if (file.type.startsWith("image/")) {
+                    setUploading(true);
+                    onUploadFile(file)
+                      .then((url) => {
+                        _currentEditor
+                          .chain()
+                          .focus()
+                          .insertContentAt(pos, { type: "image", attrs: { src: url } })
+                          .run();
+                      })
+                      .catch(() => alert("이미지 업로드에 실패했습니다."))
+                      .finally(() => setUploading(false));
+                  }
+                }
+              },
+              onPaste: (_currentEditor, files) => {
+                for (const file of files) {
+                  if (file.type.startsWith("image/")) {
+                    setUploading(true);
+                    onUploadFile(file)
+                      .then((url) => {
+                        _currentEditor.chain().focus().setImage({ src: url }).run();
+                      })
+                      .catch(() => alert("이미지 업로드에 실패했습니다."))
+                      .finally(() => setUploading(false));
+                  }
+                }
+              },
+            }),
+          ]
+        : []),
     ],
     content,
     onUpdate: ({ editor: e }) => {
-      onChange(e.getHTML());
+      const html = e.getHTML().replace(/(<p><br\s*\/?><\/p>\s*)+$/, "");
+      onChange(html);
     },
     editorProps: {
       attributes: {
-        class: "tiptap outline-none min-h-[400px] py-6 pr-4",
+        class: "tiptap outline-none p-4",
       },
-      handlePaste: (view, event) => {
-        if (!onUploadFile) return false;
-
-        const files = event.clipboardData?.files;
-        if (!files || files.length === 0) return false;
-
-        const imageFile = Array.from(files).find((f) =>
-          f.type.startsWith("image/")
-        );
-        if (!imageFile) return false;
-
-        event.preventDefault();
-        setUploading(true);
-
-        onUploadFile(imageFile)
-          .then((url) => {
-            const { state, dispatch } = view;
-            const node = state.schema.nodes.image.create({ src: url });
-            const tr = state.tr.replaceSelectionWith(node);
-            dispatch(tr);
-          })
-          .catch(() => {
-            alert("이미지 업로드에 실패했습니다.");
-          })
-          .finally(() => {
-            setUploading(false);
-          });
-
-        return true;
-      },
+      scrollThreshold: 100,
+      scrollMargin: 100,
     },
   });
 
@@ -163,6 +218,54 @@ export function TipTapEditor({
       editor.commands.fixTables();
     }
   }, [content]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 커서 이동 시 화면 따라가기
+  useEffect(() => {
+    if (!editor) return;
+    const handleSelectionUpdate = () => {
+      const { from } = editor.state.selection;
+      try {
+        const coords = editor.view.coordsAtPos(from);
+        const margin = 120;
+        if (coords.top < margin) {
+          window.scrollBy({ top: coords.top - margin, behavior: "smooth" });
+        } else if (coords.bottom > window.innerHeight - margin) {
+          window.scrollBy({ top: coords.bottom - window.innerHeight + margin, behavior: "smooth" });
+        }
+      } catch {
+        // coordsAtPos가 실패할 수 있음
+      }
+    };
+    editor.on("selectionUpdate", handleSelectionUpdate);
+    return () => { editor.off("selectionUpdate", handleSelectionUpdate); };
+  }, [editor]);
+
+  // 테이블이 에디터를 넘으면 마지막 열을 줄여서 맞춤
+  useEffect(() => {
+    if (!editor) return;
+    const editorDom = editor.view.dom;
+    const observer = new MutationObserver(() => {
+      const wrapper = editorDom.closest(".hce-editor-wrapper");
+      if (!wrapper) return;
+      const maxW = wrapper.clientWidth - 32;
+      wrapper.querySelectorAll("table").forEach((table) => {
+        const cols = table.querySelectorAll("colgroup col");
+        if (cols.length < 2) return;
+        let total = 0;
+        cols.forEach((col) => {
+          total += parseInt((col as HTMLElement).style.width || "0", 10);
+        });
+        if (total > maxW) {
+          const lastCol = cols[cols.length - 1] as HTMLElement;
+          const lastW = parseInt(lastCol.style.width || "0", 10);
+          const newW = lastW - (total - maxW);
+          if (newW >= 40) lastCol.style.width = `${newW}px`;
+        }
+      });
+    });
+    observer.observe(editorDom, { subtree: true, attributes: true, attributeFilter: ["style"] });
+    return () => observer.disconnect();
+  }, [editor]);
 
   const uploadPdf = useCallback(
     (file: File) => {
@@ -193,8 +296,44 @@ export function TipTapEditor({
   // 슬래시 커맨드 상태
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
   const [slashMenuPos, setSlashMenuPos] = useState({ top: 0, left: 0 });
+  const [slashMenuDirection, setSlashMenuDirection] = useState<"down" | "up">("down");
   const [slashQuery, setSlashQuery] = useState("");
   const slashStartPos = useRef<number | null>(null);
+  const MENU_HEIGHT = 210; // 메뉴 max-height(200) + 여유
+
+  const updateSlashMenuPosition = useCallback(() => {
+    if (!editor || slashStartPos.current === null) return;
+    const { from } = editor.state.selection;
+    const coords = editor.view.coordsAtPos(from);
+
+    // 상단/하단 고정 요소 높이 계산
+    const headerHeight = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue("--header-height") || "74"
+    );
+    const toolbarEl = editor.view.dom.closest(".hce-editor-wrapper")?.querySelector(".sticky");
+    const toolbarBottom = toolbarEl ? toolbarEl.getBoundingClientRect().bottom : headerHeight;
+    const topSafe = Math.max(toolbarBottom, headerHeight) + 4;
+
+    // 하단 sticky 바 감지
+    const bottomBar = document.querySelector(".sticky.bottom-0");
+    const bottomBarHeight = bottomBar ? bottomBar.getBoundingClientRect().height : 0;
+    const bottomSafe = window.innerHeight - bottomBarHeight - 4;
+
+    // 사용 가능한 공간
+    const spaceBelow = bottomSafe - coords.bottom;
+    const spaceAbove = coords.top - topSafe;
+    const goUp = spaceBelow < MENU_HEIGHT && spaceAbove > spaceBelow;
+
+    let top: number;
+    if (goUp) {
+      top = Math.max(topSafe, coords.top - MENU_HEIGHT);
+    } else {
+      top = Math.min(coords.bottom + 4, bottomSafe - MENU_HEIGHT);
+    }
+
+    setSlashMenuDirection(goUp ? "up" : "down");
+    setSlashMenuPos({ top, left: coords.left });
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;
@@ -202,7 +341,6 @@ export function TipTapEditor({
     const handleUpdate = () => {
       const { state } = editor;
       const { from } = state.selection;
-
       const $pos = state.doc.resolve(from);
       const lineStart = $pos.start();
       const lineText = state.doc.textBetween(lineStart, from, "\n");
@@ -210,24 +348,10 @@ export function TipTapEditor({
       if (lineText.startsWith("/")) {
         if (slashStartPos.current === null) {
           slashStartPos.current = lineStart;
-          const coords = editor.view.coordsAtPos(from);
-          const editorRect = editor.view.dom
-            .closest(".hce-editor-wrapper")
-            ?.getBoundingClientRect();
-          if (editorRect) {
-            const menuHeight = 400;
-            const spaceBelow = editorRect.bottom - coords.bottom;
-            setSlashMenuPos({
-              top:
-                spaceBelow < menuHeight
-                  ? coords.top - editorRect.top - menuHeight
-                  : coords.bottom - editorRect.top + 4,
-              left: coords.left - editorRect.left,
-            });
-          }
         }
         setSlashQuery(lineText.slice(1));
         setSlashMenuOpen(true);
+        updateSlashMenuPosition();
       } else {
         if (slashMenuOpen) {
           setSlashMenuOpen(false);
@@ -256,13 +380,18 @@ export function TipTapEditor({
     return () => {
       editor.off("update", handleUpdate);
     };
-  }, [editor, slashMenuOpen]);
+  }, [editor, slashMenuOpen, updateSlashMenuPosition]);
 
-  const closeSlashMenu = useCallback(() => {
-    if (!editor || slashStartPos.current === null) {
-      setSlashMenuOpen(false);
-      return;
-    }
+  // 스크롤 시 메뉴 위치 재계산
+  useEffect(() => {
+    if (!slashMenuOpen) return;
+    const onScroll = () => updateSlashMenuPosition();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [slashMenuOpen, updateSlashMenuPosition]);
+
+  const deleteSlashText = useCallback(() => {
+    if (!editor || slashStartPos.current === null) return;
     const { state } = editor;
     const { from } = state.selection;
     editor
@@ -270,10 +399,14 @@ export function TipTapEditor({
       .focus()
       .deleteRange({ from: slashStartPos.current, to: from })
       .run();
+  }, [editor]);
+
+  const closeSlashMenu = useCallback(() => {
+    deleteSlashText();
     setSlashMenuOpen(false);
     slashStartPos.current = null;
     setSlashQuery("");
-  }, [editor]);
+  }, [deleteSlashText]);
 
   if (!editor) return null;
 
@@ -281,8 +414,8 @@ export function TipTapEditor({
     <div className="hce-editor-wrapper relative border border-border rounded-xl bg-background">
       <FixedToolbar editor={editor} onPdfClick={() => pdfInputRef.current?.click()} />
 
-      <BlockHandle editor={editor} />
       <EditorContent editor={editor} />
+      <TableBubbleMenu editor={editor} />
 
       {uploading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-xl">
@@ -295,7 +428,7 @@ export function TipTapEditor({
       {slashMenuOpen && (
         <div
           style={{ top: slashMenuPos.top, left: slashMenuPos.left }}
-          className="absolute z-50"
+          className="fixed z-50"
         >
           <SlashCommandMenu
             editor={editor}
