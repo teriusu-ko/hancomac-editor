@@ -22,13 +22,23 @@ jobs:
 
       - run: npm ci --legacy-peer-deps
 
-      - name: Bump patch version
+      - name: Determine version
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          npm version patch --no-git-tag-version
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          LOCAL=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view @teriusu/hancomac-editor version 2>/dev/null || echo "0.0.0")
+          echo "Local: $LOCAL, Published: $PUBLISHED"
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "Version unchanged — auto bumping patch"
+            npm version patch --no-git-tag-version
+            LOCAL=$(node -p "require('./package.json').version")
+            echo "BUMPED=true" >> "$GITHUB_ENV"
+          else
+            echo "Version already bumped manually"
+            echo "BUMPED=false" >> "$GITHUB_ENV"
+          fi
+          echo "VERSION=$LOCAL" >> "$GITHUB_ENV"
 
       - run: npm run build
 
@@ -38,10 +48,17 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit version bump
+        if: env.BUMPED == 'true'
         run: |
           git add package.json package-lock.json dist/
           git commit -m "chore: v${VERSION}" || true
           git push
+
+      - name: Commit dist only
+        if: env.BUMPED == 'false'
+        run: |
+          git add dist/
+          git diff --cached --quiet || (git commit -m "chore: dist v${VERSION}" && git push)
 
       - name: Trigger hancomac update
         run: |
