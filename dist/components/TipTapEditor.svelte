@@ -451,6 +451,8 @@
 
 <div
   class="hce-editor-wrapper relative border border-border rounded-xl bg-background"
+  ondragover={(e) => e.preventDefault()}
+  ondrop={(e) => { if (!onUploadFile) e.preventDefault(); }}
 >
   {#if editor}
     <FixedToolbar {editor} onPdfClick={() => pdfInputEl?.click()} />
@@ -459,7 +461,6 @@
   <div bind:this={editorElement}></div>
 
   {#if editor}
-    <BubbleToolbar {editor} />
     <TableBubbleMenu {editor} />
 
     {#if uploading}

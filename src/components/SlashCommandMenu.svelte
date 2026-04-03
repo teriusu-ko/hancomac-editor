@@ -14,7 +14,7 @@
     LinkIcon,
     Table as TableIcon,
     FileText,
-    Youtube,
+    Video,
     ChevronRight,
   } from "lucide-svelte";
   import type { SlashMenuItem } from "../types";
@@ -113,7 +113,7 @@
     {
       label: "YouTube 영상",
       keywords: "youtube video 영상 동영상 유튜브",
-      icon: Youtube,
+      icon: Video,
       command: (editor) => {
         const url = window.prompt("YouTube URL을 입력하세요");
         if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
