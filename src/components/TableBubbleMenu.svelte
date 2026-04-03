@@ -87,7 +87,7 @@
     const wrapperRect = wrapper.getBoundingClientRect();
 
     pos = {
-      top: tableRect.top - wrapperRect.top - 36,
+      top: tableRect.top - wrapperRect.top - 44,
       left: tableRect.left - wrapperRect.left,
       width: tableRect.width,
     };
@@ -120,7 +120,7 @@
 {#if visible}
   <div
     bind:this={menuEl}
-    class="absolute z-20"
+    class="absolute z-50"
     style="top: {pos.top}px; left: {pos.left}px; width: {pos.width}px"
   >
     <div

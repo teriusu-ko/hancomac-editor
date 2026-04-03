@@ -35,7 +35,7 @@
     CheckSquare,
     Superscript,
     Subscript,
-    Youtube,
+    Video,
     ChevronRight,
   } from "lucide-svelte";
   import { cn } from "../utils/cn";
@@ -103,14 +103,14 @@
 </script>
 
 <div
-  class="sticky top-[74px] z-10 flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-border bg-background rounded-t-xl"
+  class="sticky z-30 flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-border bg-background rounded-t-xl"
   style="top: var(--header-height, 74px)"
 >
   <!-- Format -->
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleBold().run()}
-    title="굵게"
+    data-tooltip="굵게"
     aria-label="굵게"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -124,7 +124,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleItalic().run()}
-    title="기울임"
+    data-tooltip="기울임"
     aria-label="기울임"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -138,7 +138,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleUnderline().run()}
-    title="밑줄"
+    data-tooltip="밑줄"
     aria-label="밑줄"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -152,7 +152,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleStrike().run()}
-    title="취소선"
+    data-tooltip="취소선"
     aria-label="취소선"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -166,7 +166,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleHighlight().run()}
-    title="하이라이트"
+    data-tooltip="하이라이트"
     aria-label="하이라이트"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -180,7 +180,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleSuperscript().run()}
-    title="위첨자"
+    data-tooltip="위첨자"
     aria-label="위첨자"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -194,7 +194,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleSubscript().run()}
-    title="아래첨자"
+    data-tooltip="아래첨자"
     aria-label="아래첨자"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -212,7 +212,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().setTextAlign("left").run()}
-    title="왼쪽 정렬"
+    data-tooltip="왼쪽 정렬"
     aria-label="왼쪽 정렬"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -226,7 +226,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().setTextAlign("center").run()}
-    title="가운데 정렬"
+    data-tooltip="가운데 정렬"
     aria-label="가운데 정렬"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -240,7 +240,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().setTextAlign("right").run()}
-    title="오른쪽 정렬"
+    data-tooltip="오른쪽 정렬"
     aria-label="오른쪽 정렬"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -258,7 +258,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-    title="제목 1"
+    data-tooltip="제목 1"
     aria-label="제목 1"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -272,7 +272,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-    title="제목 2"
+    data-tooltip="제목 2"
     aria-label="제목 2"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -286,7 +286,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-    title="제목 3"
+    data-tooltip="제목 3"
     aria-label="제목 3"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -304,7 +304,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleBulletList().run()}
-    title="글머리 목록"
+    data-tooltip="글머리 목록"
     aria-label="글머리 목록"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -318,7 +318,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleOrderedList().run()}
-    title="번호 목록"
+    data-tooltip="번호 목록"
     aria-label="번호 목록"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -332,7 +332,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleTaskList().run()}
-    title="체크리스트"
+    data-tooltip="체크리스트"
     aria-label="체크리스트"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -346,7 +346,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().toggleBlockquote().run()}
-    title="인용문"
+    data-tooltip="인용문"
     aria-label="인용문"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -360,7 +360,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().setHorizontalRule().run()}
-    title="구분선"
+    data-tooltip="구분선"
     aria-label="구분선"
     class="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
   >
@@ -369,7 +369,7 @@
   <button
     type="button"
     onclick={() => editor.chain().focus().setDetails().run()}
-    title="토글 (접기/펼치기)"
+    data-tooltip="토글 (접기/펼치기)"
     aria-label="토글 (접기/펼치기)"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -387,7 +387,7 @@
   <button
     type="button"
     onclick={addLink}
-    title="링크"
+    data-tooltip="링크"
     aria-label="링크"
     class={cn(
       "p-1.5 rounded-md transition-colors",
@@ -401,7 +401,7 @@
   <button
     type="button"
     onclick={addImage}
-    title="이미지"
+    data-tooltip="이미지"
     aria-label="이미지"
     class="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
   >
@@ -410,7 +410,7 @@
   <button
     type="button"
     onclick={onPdfClick}
-    title="PDF 삽입"
+    data-tooltip="PDF 삽입"
     aria-label="PDF 삽입"
     class="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
   >
@@ -422,11 +422,11 @@
       const url = window.prompt("YouTube URL을 입력하세요");
       if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run();
     }}
-    title="YouTube 영상"
+    data-tooltip="YouTube 영상"
     aria-label="YouTube 영상"
     class="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
   >
-    <Youtube size={iconSize} />
+    <Video size={iconSize} />
   </button>
 
   <!-- Table menu -->
@@ -434,7 +434,7 @@
     <button
       type="button"
       onclick={() => (tableMenuOpen = !tableMenuOpen)}
-      title="표"
+      data-tooltip="표"
       aria-label="표"
       class={cn(
         "flex items-center gap-0.5 p-1.5 rounded-md transition-colors",
@@ -448,7 +448,7 @@
     </button>
     {#if tableMenuOpen}
       <div
-        class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 py-1"
+        class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 py-1"
         style="min-width: 220px"
       >
         {#if !isInTable}
@@ -678,7 +678,7 @@
     <button
       type="button"
       onclick={() => (codeMenuOpen = !codeMenuOpen)}
-      title="코드 블록"
+      data-tooltip="코드 블록"
       aria-label="코드 블록"
       class={cn(
         "flex items-center gap-0.5 p-1.5 rounded-md transition-colors",
@@ -692,7 +692,7 @@
     </button>
     {#if codeMenuOpen}
       <div
-        class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-20 py-1"
+        class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 py-1"
         style="min-width: 130px"
       >
         <button
@@ -737,7 +737,7 @@
     type="button"
     onclick={() => editor.chain().focus().undo().run()}
     disabled={!editor.can().undo()}
-    title="실행 취소"
+    data-tooltip="실행 취소"
     aria-label="실행 취소"
     class={cn(
       "p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -750,7 +750,7 @@
     type="button"
     onclick={() => editor.chain().focus().redo().run()}
     disabled={!editor.can().redo()}
-    title="다시 실행"
+    data-tooltip="다시 실행"
     aria-label="다시 실행"
     class={cn(
       "p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -763,7 +763,7 @@
   <!-- Modals -->
   {#if modalState?.type === "link"}
     <InputModal
-      title="링크 URL 입력"
+      data-tooltip="링크 URL 입력"
       placeholder="https://example.com"
       defaultValue={editor.isActive("link") ? editor.getAttributes("link").href || "" : ""}
       onConfirm={(url) => {
@@ -780,7 +780,7 @@
   {/if}
   {#if modalState?.type === "image"}
     <InputModal
-      title="이미지 URL 입력"
+      data-tooltip="이미지 URL 입력"
       placeholder="https://example.com/image.png"
       onConfirm={(url) => {
         editor.chain().focus().setImage({ src: url }).run();
