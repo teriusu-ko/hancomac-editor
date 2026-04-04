@@ -37,36 +37,68 @@ export const FileAttachment = Node.create({
     addAttributes() {
         return {
             src: { default: null },
-            name: { default: "파일" },
+            fileId: { default: null },
+            name: { default: "\uD30C\uC77C" },
             size: { default: null },
         };
     },
     parseHTML() {
         return [
+            // 하이브리드: data-file-id + data-file-src
             {
-                tag: 'div[data-file-src]',
+                tag: "div[data-file-id]",
                 getAttrs: (dom) => {
                     const el = dom;
                     return {
-                        src: el.getAttribute("data-file-src"),
-                        name: el.getAttribute("data-file-name") || "파일",
+                        fileId: el.getAttribute("data-file-id"),
+                        src: el.getAttribute("data-file-src") || null,
+                        name: el.getAttribute("data-file-name") || "\uD30C\uC77C",
                         size: el.getAttribute("data-file-size")
                             ? Number(el.getAttribute("data-file-size"))
                             : null,
                     };
                 },
             },
+            // URL 직접 방식 (data-file-src만)
+            {
+                tag: "div[data-file-src]",
+                getAttrs: (dom) => {
+                    const el = dom;
+                    return {
+                        src: el.getAttribute("data-file-src"),
+                        fileId: null,
+                        name: el.getAttribute("data-file-name") || "\uD30C\uC77C",
+                        size: el.getAttribute("data-file-size")
+                            ? Number(el.getAttribute("data-file-size"))
+                            : null,
+                    };
+                },
+            },
+            // 레거시: <tiptap-file id="X">
+            {
+                tag: "tiptap-file",
+                getAttrs: (dom) => {
+                    const el = dom;
+                    return {
+                        fileId: el.getAttribute("id") || null,
+                        src: null,
+                        name: el.textContent?.trim() || "\uD30C\uC77C",
+                        size: null,
+                    };
+                },
+            },
         ];
     },
     renderHTML({ HTMLAttributes }) {
-        return [
-            "div",
-            mergeAttributes(this.options.HTMLAttributes, {
-                "data-file-src": HTMLAttributes.src,
-                "data-file-name": HTMLAttributes.name,
-                "data-file-size": HTMLAttributes.size ?? "",
-            }),
-        ];
+        const attrs = {};
+        if (HTMLAttributes.fileId)
+            attrs["data-file-id"] = HTMLAttributes.fileId;
+        if (HTMLAttributes.src)
+            attrs["data-file-src"] = HTMLAttributes.src;
+        attrs["data-file-name"] = HTMLAttributes.name || "\uD30C\uC77C";
+        if (HTMLAttributes.size)
+            attrs["data-file-size"] = String(HTMLAttributes.size);
+        return ["div", mergeAttributes(this.options.HTMLAttributes, attrs)];
     },
     addNodeView() {
         return ({ node, editor }) => {
@@ -79,7 +111,6 @@ export const FileAttachment = Node.create({
             const info = document.createElement("div");
             info.style.cssText = "flex:1;min-width:0;";
             const nameEl = document.createElement("a");
-            nameEl.href = node.attrs.src;
             nameEl.target = "_blank";
             nameEl.rel = "noopener noreferrer";
             nameEl.textContent = node.attrs.name;
@@ -88,8 +119,36 @@ export const FileAttachment = Node.create({
             const sizeEl = document.createElement("span");
             sizeEl.style.cssText =
                 "font-size:11px;color:var(--muted-foreground, #718096);";
-            if (node.attrs.size) {
-                sizeEl.textContent = formatFileSize(node.attrs.size);
+            // URL이 있으면 바로 표시
+            if (node.attrs.src) {
+                nameEl.href = node.attrs.src;
+                if (node.attrs.size)
+                    sizeEl.textContent = formatFileSize(node.attrs.size);
+            }
+            else if (node.attrs.fileId) {
+                // ID만 있으면 resolver로 해결 시도
+                nameEl.href = "#";
+                nameEl.style.pointerEvents = "none";
+                sizeEl.textContent = "loading...";
+                const resolver = editor.storage.fileAttachment?.resolver;
+                if (resolver) {
+                    resolver(node.attrs.fileId)
+                        .then((result) => {
+                        nameEl.href = result.src;
+                        nameEl.style.pointerEvents = "";
+                        if (result.name) {
+                            nameEl.textContent = result.name;
+                            icon.textContent = getFileIcon(result.name);
+                        }
+                        sizeEl.textContent = result.size ? formatFileSize(result.size) : "";
+                    })
+                        .catch(() => {
+                        sizeEl.textContent = "resolve failed";
+                    });
+                }
+                else {
+                    sizeEl.textContent = `ID: ${node.attrs.fileId}`;
+                }
             }
             info.appendChild(nameEl);
             info.appendChild(sizeEl);
@@ -117,6 +176,9 @@ export const FileAttachment = Node.create({
             }
             return { dom };
         };
+    },
+    addStorage() {
+        return { resolver: null };
     },
     addCommands() {
         return {

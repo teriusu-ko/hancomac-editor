@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import type { Component } from "svelte";
+import type { FileResolver } from "./extensions/FileAttachment";
 /** 파일 업로드 핸들러 -- 호스트 앱에서 구현 */
 export type UploadHandler = (file: File) => Promise<string>;
 export interface TipTapEditorProps {
@@ -8,6 +9,8 @@ export interface TipTapEditorProps {
     placeholder?: string;
     /** 이미지/PDF 파일 업로드 시 호출. URL을 반환해야 함 */
     onUploadFile?: UploadHandler;
+    /** 파일 ID → URL 변환. 하이브리드 파일 저장 시 사용 */
+    onResolveFile?: FileResolver;
 }
 export interface FixedToolbarProps {
     editor: Editor;

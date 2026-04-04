@@ -25,7 +25,9 @@ export const Indent = Extension.create({
             parseHTML: (element) => {
               const ml = element.style.marginLeft;
               if (!ml) return 0;
-              return Math.round(parseFloat(ml) / INDENT_STEP) || 0;
+              const value = parseFloat(ml);
+              if (ml.endsWith("px")) return Math.round(value / 40) || 0;
+              return Math.round(value / INDENT_STEP) || 0;
             },
             renderHTML: (attributes) => {
               if (!attributes.indent || attributes.indent <= 0) return {};

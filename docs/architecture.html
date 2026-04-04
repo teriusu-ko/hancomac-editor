@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@hancomac/editor 구조 설명</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.7; overflow-x: hidden; }
+
+  /* 섹션 */
+  section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem 2rem; position: relative; }
+  section:nth-child(even) { background: #1e293b; }
+
+  h1 { font-size: 2.5rem; font-weight: 800; text-align: center; margin-bottom: 1rem; }
+  h1 span { color: #60a5fa; }
+  h2 { font-size: 1.8rem; font-weight: 700; text-align: center; margin-bottom: 2rem; }
+  h2 span { color: #60a5fa; }
+  h3 { font-size: 1.2rem; color: #94a3b8; text-align: center; margin-bottom: 3rem; }
+  p.sub { color: #94a3b8; text-align: center; font-size: 1.1rem; max-width: 600px; }
+
+  /* 카드 */
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; max-width: 500px; width: 100%; }
+  section:nth-child(even) .card { background: #0f172a; }
+
+  /* 다이어그램 */
+  .diagram-row { display: flex; gap: 2rem; align-items: center; justify-content: center; flex-wrap: wrap; max-width: 1000px; }
+
+  .pkg-box { border: 2px solid; border-radius: 16px; padding: 1.5rem; width: 320px; position: relative; overflow: hidden; }
+  .pkg-box.editor { border-color: #3b82f6; background: rgba(59,130,246,0.08); }
+  .pkg-box.host { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+  .pkg-box .badge { position: absolute; top: -1px; right: -1px; padding: 0.3rem 0.8rem; border-radius: 0 14px 0 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .pkg-box.editor .badge { background: #3b82f6; color: white; }
+  .pkg-box.host .badge { background: #22c55e; color: white; }
+  .pkg-box h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem; }
+  .pkg-box ul { list-style: none; font-size: 0.9rem; }
+  .pkg-box ul li { padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem; }
+  .pkg-box ul li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .pkg-box.editor ul li::before { background: #3b82f6; }
+  .pkg-box.host ul li::before { background: #22c55e; }
+
+  /* 화살표 애니메이션 */
+  .arrow-container { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+  .arrow-animated { font-size: 2rem; color: #f59e0b; animation: pulse-arrow 1.5s ease-in-out infinite; }
+  .arrow-label { font-size: 0.75rem; color: #f59e0b; font-weight: 600; max-width: 80px; text-align: center; }
+  @keyframes pulse-arrow { 0%,100% { opacity: 0.4; transform: translateX(0); } 50% { opacity: 1; transform: translateX(4px); } }
+
+  /* CSS 레이어 시각화 */
+  .layer-stack { display: flex; flex-direction: column; gap: 0; max-width: 600px; width: 100%; perspective: 800px; }
+  .layer { padding: 1.2rem 1.5rem; border-radius: 12px; position: relative; transform-origin: center bottom; transition: transform 0.3s, box-shadow 0.3s; cursor: default; }
+  .layer:hover { transform: rotateX(-5deg) translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); z-index: 10; }
+  .layer-host { background: linear-gradient(135deg, #166534, #22c55e); color: white; border-radius: 12px 12px 0 0; }
+  .layer-tailwind { background: linear-gradient(135deg, #0e7490, #06b6d4); color: white; }
+  .layer-vars { background: linear-gradient(135deg, #9333ea, #a855f7); color: white; }
+  .layer-editor-css { background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: white; }
+  .layer-editor-ui { background: linear-gradient(135deg, #c2410c, #f97316); color: white; border-radius: 0 0 12px 12px; }
+  .layer .layer-title { font-weight: 700; font-size: 0.95rem; }
+  .layer .layer-desc { font-size: 0.8rem; opacity: 0.9; margin-top: 0.2rem; }
+  .layer .layer-from { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px; background: rgba(255,255,255,0.2); font-weight: 600; }
+
+  /* 데이터 흐름 */
+  .flow { display: flex; flex-direction: column; gap: 0; max-width: 700px; width: 100%; }
+  .flow-step { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; }
+  .flow-num { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; flex-shrink: 0; }
+  .flow-line { width: 2px; height: 30px; margin-left: 19px; }
+  .flow-content { flex: 1; }
+  .flow-content strong { display: block; font-size: 0.95rem; }
+  .flow-content span { font-size: 0.85rem; color: #94a3b8; }
+
+  /* 코드 */
+  pre { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; max-width: 650px; width: 100%; }
+  section:nth-child(odd) pre { background: #1e293b; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  .code-comment { color: #64748b; }
+  .code-keyword { color: #c084fc; }
+  .code-string { color: #86efac; }
+  .code-tag { color: #f87171; }
+  .code-attr { color: #fbbf24; }
+  .code-fn { color: #60a5fa; }
+
+  /* 비유 박스 */
+  .metaphor { display: flex; gap: 2rem; align-items: center; justify-content: center; flex-wrap: wrap; max-width: 800px; }
+  .metaphor-item { text-align: center; width: 200px; }
+  .metaphor-icon { font-size: 4rem; margin-bottom: 0.5rem; animation: float 3s ease-in-out infinite; }
+  .metaphor-item:nth-child(2) .metaphor-icon { animation-delay: 0.5s; }
+  .metaphor-item:nth-child(3) .metaphor-icon { animation-delay: 1s; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .metaphor-label { font-weight: 700; font-size: 1rem; }
+  .metaphor-desc { font-size: 0.8rem; color: #94a3b8; margin-top: 0.3rem; }
+  .metaphor-plus { font-size: 2rem; color: #64748b; padding-top: 1rem; }
+
+  /* 핵심 답변 하이라이트 */
+  .highlight-box { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(34,197,94,0.15)); border: 2px solid #3b82f6; border-radius: 16px; padding: 2rem; max-width: 700px; width: 100%; text-align: center; }
+  .highlight-box .big { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .highlight-box .big .yes { color: #22c55e; }
+  .highlight-box .big .no { color: #f87171; }
+  .highlight-box p { color: #94a3b8; }
+
+  /* 네비게이션 */
+  nav { position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 0.5rem; z-index: 100; }
+  nav a { width: 10px; height: 10px; border-radius: 50%; background: #475569; display: block; transition: background 0.3s, transform 0.3s; }
+  nav a:hover, nav a.active { background: #60a5fa; transform: scale(1.4); }
+
+  /* 반응형 */
+  @media (max-width: 768px) {
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.4rem; }
+    .diagram-row { flex-direction: column; }
+    .arrow-animated { transform: rotate(90deg); }
+    .pkg-box { width: 100%; max-width: 350px; }
+    .metaphor { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#s1" title="비유"></a>
+  <a href="#s2" title="핵심 답변"></a>
+  <a href="#s3" title="구조"></a>
+  <a href="#s4" title="CSS 레이어"></a>
+  <a href="#s5" title="데이터 흐름"></a>
+  <a href="#s6" title="다른 앱에 붙이기"></a>
+</nav>
+
+<!-- ============================================ -->
+<section id="s1">
+  <h2>에디터는 <span>완제품</span>입니다</h2>
+  <h3>비유로 이해하기</h3>
+  <div class="metaphor">
+    <div class="metaphor-item">
+      <div class="metaphor-icon">🏭</div>
+      <div class="metaphor-label">에디터 패키지</div>
+      <div class="metaphor-desc">에어컨 본체<br>기능이 다 들어있음<br>(컴프레서, 팬, 리모컨)</div>
+    </div>
+    <div class="metaphor-plus">+</div>
+    <div class="metaphor-item">
+      <div class="metaphor-icon">🏠</div>
+      <div class="metaphor-label">호스트 앱</div>
+      <div class="metaphor-desc">집 (설치 장소)<br>전기(CSS 변수)와<br>배수구(업로드 함수) 제공</div>
+    </div>
+    <div class="metaphor-plus">=</div>
+    <div class="metaphor-item">
+      <div class="metaphor-icon">❄️</div>
+      <div class="metaphor-label">완성</div>
+      <div class="metaphor-desc">에어컨이 집의 전기로<br>돌아가면서 집 색깔에<br>맞게 보임</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="s2">
+  <h2>호스트 CSS가 <span>적용되는 거야?</span></h2>
+  <div style="display:flex; flex-direction:column; gap:1.5rem; align-items:center;">
+    <div class="highlight-box">
+      <div class="big"><span class="yes">YES</span> — 색상만</div>
+      <p>호스트 앱의 CSS 변수(--primary, --border 등)가 에디터 색상을 결정합니다</p>
+    </div>
+    <div class="highlight-box">
+      <div class="big"><span class="yes">YES</span> — Tailwind 클래스</div>
+      <p>에디터가 쓰는 Tailwind 클래스(bg-popover, rounded-lg 등)는 호스트의 Tailwind가 생성합니다<br><strong style="color:#f59e0b">→ 그래서 @source 필수!</strong></p>
+    </div>
+    <div class="highlight-box">
+      <div class="big"><span class="no">NO</span> — 레이아웃/구조</div>
+      <p>에디터의 레이아웃, 툴바, 메뉴 구조는 에디터 자체 CSS(editor.css)가 담당합니다</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="s3">
+  <h2>두 프로젝트 <span>구조</span></h2>
+  <div class="diagram-row">
+    <div class="pkg-box editor">
+      <div class="badge">NPM 패키지</div>
+      <h4>📦 hancomac-editor</h4>
+      <ul>
+        <li>TipTapEditor (메인 컴포넌트)</li>
+        <li>FixedToolbar (상단 툴바)</li>
+        <li>TableBubbleMenu (표 메뉴)</li>
+        <li>SlashCommandMenu (/ 메뉴)</li>
+        <li>editor.css (에디터 전용 스타일)</li>
+        <li>PdfBlock, Indent 확장</li>
+      </ul>
+    </div>
+
+    <div class="arrow-container">
+      <div class="arrow-label">content<br>onChange</div>
+      <div class="arrow-animated">⇄</div>
+      <div class="arrow-label">CSS 변수<br>Upload 함수</div>
+    </div>
+
+    <div class="pkg-box host">
+      <div class="badge">웹 앱</div>
+      <h4>🌐 hancomac-svelte</h4>
+      <ul>
+        <li>CSS 변수 (색상 테마)</li>
+        <li>Tailwind CSS (클래스 생성)</li>
+        <li>@source (에디터 dist 스캔)</li>
+        <li>업로드 API (R2 저장)</li>
+        <li>페이지 레이아웃</li>
+        <li>sanitize.ts (HTML 정화)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="s4">
+  <h2>CSS <span>레이어</span> 시각화</h2>
+  <h3>마우스를 올려보세요 — 아래에서 위로 쌓입니다</h3>
+  <div class="layer-stack">
+    <div class="layer layer-host">
+      <div class="layer-title">5. 호스트 앱 페이지 CSS</div>
+      <div class="layer-desc">글쓰기 페이지 레이아웃, max-width 등</div>
+      <div class="layer-from">호스트</div>
+    </div>
+    <div class="layer layer-tailwind">
+      <div class="layer-title">4. Tailwind 유틸리티 클래스</div>
+      <div class="layer-desc">bg-popover, rounded-lg, shadow-xl, flex, p-2 등</div>
+      <div class="layer-from">호스트가 생성</div>
+    </div>
+    <div class="layer layer-vars">
+      <div class="layer-title">3. CSS 변수 (테마 색상)</div>
+      <div class="layer-desc">--primary: #4A7DAC, --border: #e2e8f0 ...</div>
+      <div class="layer-from">호스트가 정의</div>
+    </div>
+    <div class="layer layer-editor-css">
+      <div class="layer-title">2. editor.css (에디터 전용)</div>
+      <div class="layer-desc">.tiptap 레이아웃, 표 스타일, 코드블록, 체크리스트</div>
+      <div class="layer-from">에디터</div>
+    </div>
+    <div class="layer layer-editor-ui">
+      <div class="layer-title">1. 에디터 컴포넌트 (Svelte)</div>
+      <div class="layer-desc">FixedToolbar, SlashMenu, TableBubble — 인라인 Tailwind 클래스 사용</div>
+      <div class="layer-from">에디터</div>
+    </div>
+  </div>
+  <p style="margin-top:1.5rem; color:#94a3b8; text-align:center; max-width:500px;">
+    에디터 컴포넌트가 <code style="background:#334155;padding:0.1em 0.4em;border-radius:4px;">bg-popover</code>를 쓰면<br>
+    → Tailwind가 <code style="background:#334155;padding:0.1em 0.4em;border-radius:4px;">background: var(--color-popover)</code> 생성<br>
+    → CSS 변수에서 <code style="background:#334155;padding:0.1em 0.4em;border-radius:4px;">--popover: #ffffff</code> 적용<br>
+    → 하얀 배경이 보임
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section id="s5">
+  <h2>데이터 <span>흐름</span></h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num" style="background:#3b82f6;color:white;">1</div>
+      <div class="flow-content">
+        <strong>호스트 → 에디터: content 전달</strong>
+        <span>저장된 HTML을 에디터에 넣어줌 (수정 시)</span>
+      </div>
+    </div>
+    <div class="flow-line" style="background:linear-gradient(#3b82f6,#f59e0b);"></div>
+    <div class="flow-step">
+      <div class="flow-num" style="background:#f59e0b;color:white;">2</div>
+      <div class="flow-content">
+        <strong>사용자가 에디터에서 글 작성</strong>
+        <span>타이핑, 이미지 삽입, 표 추가, 코드블록 등</span>
+      </div>
+    </div>
+    <div class="flow-line" style="background:linear-gradient(#f59e0b,#22c55e);"></div>
+    <div class="flow-step">
+      <div class="flow-num" style="background:#22c55e;color:white;">3</div>
+      <div class="flow-content">
+        <strong>에디터 → 호스트: onChange(html) 콜백</strong>
+        <span>에디터 내용이 바뀔 때마다 HTML 문자열 전달</span>
+      </div>
+    </div>
+    <div class="flow-line" style="background:linear-gradient(#22c55e,#a855f7);"></div>
+    <div class="flow-step">
+      <div class="flow-num" style="background:#a855f7;color:white;">4</div>
+      <div class="flow-content">
+        <strong>이미지/PDF 업로드 시</strong>
+        <span>에디터가 onUploadFile(file) 호출 → 호스트가 서버에 업로드 → URL 반환 → 에디터에 삽입</span>
+      </div>
+    </div>
+    <div class="flow-line" style="background:linear-gradient(#a855f7,#ef4444);"></div>
+    <div class="flow-step">
+      <div class="flow-num" style="background:#ef4444;color:white;">5</div>
+      <div class="flow-content">
+        <strong>저장 버튼 클릭</strong>
+        <span>호스트가 form.content (HTML)를 sanitize 후 DB에 저장</span>
+      </div>
+    </div>
+    <div class="flow-line" style="background:linear-gradient(#ef4444,#06b6d4);"></div>
+    <div class="flow-step">
+      <div class="flow-num" style="background:#06b6d4;color:white;">6</div>
+      <div class="flow-content">
+        <strong>게시물 열람</strong>
+        <span>{@html content}로 렌더링 + hljs 코드 하이라이팅 + PDF 뷰어 마운트</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="s6">
+  <h2>다른 앱에 <span>붙이는 법</span></h2>
+  <h3>5단계만 따라하면 됩니다</h3>
+
+  <div style="display:flex; flex-direction:column; gap:2rem; max-width:700px; width:100%;">
+
+    <div class="card">
+      <h4 style="color:#3b82f6; margin-bottom:0.8rem;">Step 1 — 설치</h4>
+<pre><code><span class="code-fn">pnpm</span> add @teriusu/hancomac-editor
+<span class="code-comment"># 또는</span>
+<span class="code-fn">npm</span> install @teriusu/hancomac-editor --legacy-peer-deps</code></pre>
+    </div>
+
+    <div class="card">
+      <h4 style="color:#a855f7; margin-bottom:0.8rem;">Step 2 — CSS 변수 정의 (필수 8개)</h4>
+<pre><code><span class="code-tag">:root</span> {
+  <span class="code-attr">--background</span>: <span class="code-string">#ffffff</span>;
+  <span class="code-attr">--foreground</span>: <span class="code-string">#2d3748</span>;
+  <span class="code-attr">--primary</span>: <span class="code-string">#4A7DAC</span>;
+  <span class="code-attr">--muted</span>: <span class="code-string">#f7fafc</span>;
+  <span class="code-attr">--muted-foreground</span>: <span class="code-string">#718096</span>;
+  <span class="code-attr">--border</span>: <span class="code-string">#e2e8f0</span>;
+  <span class="code-attr">--popover</span>: <span class="code-string">#ffffff</span>;
+  <span class="code-attr">--destructive</span>: <span class="code-string">#FF6B6B</span>;
+}</code></pre>
+    </div>
+
+    <div class="card">
+      <h4 style="color:#06b6d4; margin-bottom:0.8rem;">Step 3 — CSS import + Tailwind 소스</h4>
+<pre><code><span class="code-comment">/* 글로벌 CSS */</span>
+<span class="code-keyword">@import</span> <span class="code-string">"@teriusu/hancomac-editor/styles"</span>;
+
+<span class="code-comment">/* Tailwind v4 필수! 이거 없으면 메뉴가 투명 */</span>
+<span class="code-keyword">@source</span> <span class="code-string">"../node_modules/@teriusu/hancomac-editor/dist"</span>;
+
+<span class="code-comment">/* Tailwind v3이면 대신: */</span>
+<span class="code-comment">// tailwind.config.js content에 추가</span>
+<span class="code-comment">// "./node_modules/@teriusu/hancomac-editor/dist/**/*.svelte"</span></code></pre>
+    </div>
+
+    <div class="card">
+      <h4 style="color:#f59e0b; margin-bottom:0.8rem;">Step 4 — 컴포넌트 사용</h4>
+<pre><code><span class="code-tag">&lt;script</span> <span class="code-attr">lang</span>=<span class="code-string">"ts"</span><span class="code-tag">&gt;</span>
+  <span class="code-keyword">import</span> { TipTapEditor } <span class="code-keyword">from</span> <span class="code-string">'@teriusu/hancomac-editor'</span>;
+
+  <span class="code-keyword">let</span> content = <span class="code-fn">$state</span>(<span class="code-string">''</span>);
+
+  <span class="code-comment">// 업로드 함수 (선택)</span>
+  <span class="code-keyword">async function</span> <span class="code-fn">upload</span>(file: File) {
+    <span class="code-keyword">const</span> fd = <span class="code-keyword">new</span> FormData();
+    fd.append(<span class="code-string">'file'</span>, file);
+    <span class="code-keyword">const</span> res = <span class="code-keyword">await</span> fetch(<span class="code-string">'/api/upload'</span>, { method: <span class="code-string">'POST'</span>, body: fd });
+    <span class="code-keyword">return</span> (await res.json()).url;
+  }
+<span class="code-tag">&lt;/script&gt;</span>
+
+<span class="code-tag">&lt;TipTapEditor</span>
+  <span class="code-attr">{content}</span>
+  <span class="code-attr">onChange</span>=<span class="code-string">{(html) => { content = html; }}</span>
+  <span class="code-attr">onUploadFile</span>=<span class="code-string">{upload}</span>
+<span class="code-tag">/&gt;</span></code></pre>
+    </div>
+
+    <div class="card">
+      <h4 style="color:#22c55e; margin-bottom:0.8rem;">Step 5 — 게시물에서 HTML 렌더링</h4>
+<pre><code><span class="code-comment">&lt;!-- 저장된 HTML 표시 --&gt;</span>
+<span class="code-tag">&lt;div</span> <span class="code-attr">class</span>=<span class="code-string">"post-content"</span><span class="code-tag">&gt;</span>
+  {<span class="code-keyword">@html</span> savedContent}
+<span class="code-tag">&lt;/div&gt;</span>
+
+<span class="code-comment">&lt;!-- 코드 하이라이팅 (선택) --&gt;</span>
+<span class="code-keyword">import</span> hljs <span class="code-keyword">from</span> <span class="code-string">'highlight.js'</span>;
+<span class="code-keyword">import</span> <span class="code-string">'highlight.js/styles/atom-one-dark.css'</span>;
+onMount(() => hljs.highlightAll());</code></pre>
+    </div>
+
+  </div>
+</section>
+
+<section style="min-height: 40vh;">
+  <h2>요약</h2>
+  <div style="display:flex; flex-direction:column; gap:1rem; max-width:600px; width:100%;">
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <span style="font-size:2rem;">📦</span>
+      <span>에디터 = <strong>UI 완제품</strong> (툴바, 메뉴, 스타일 내장)</span>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <span style="font-size:2rem;">🎨</span>
+      <span>호스트 = <strong>색상 테마</strong>(CSS 변수) + <strong>업로드 함수</strong> 제공</span>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <span style="font-size:2rem;">🔗</span>
+      <span>Tailwind 클래스는 <strong>호스트가 생성</strong> → <code style="background:#334155;padding:0.1em 0.4em;border-radius:4px;">@source</code> 필수</span>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:center;">
+      <span style="font-size:2rem;">🔌</span>
+      <span>다른 앱에 붙이기: <strong>5단계</strong> (설치 → 변수 → import → 사용 → 렌더링)</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
