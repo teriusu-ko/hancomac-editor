@@ -626,6 +626,44 @@
   cursor: grabbing;
 }
 
+/* ── 컬럼 레이아웃 ── */
+.tiptap div[data-type="columns"] {
+  display: grid;
+  gap: 24px;
+  margin: 1em 0;
+}
+
+.tiptap div[data-type="columns"][data-columns="2"] {
+  grid-template-columns: 1fr 1fr;
+}
+
+.tiptap div[data-type="columns"][data-columns="3"] {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.tiptap div[data-type="column"] {
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.tiptap div[data-type="column"]:focus-within {
+  border-color: var(--primary);
+  border-style: solid;
+}
+
+.tiptap div[data-type="columns"].ProseMirror-selectednode {
+  outline: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .tiptap div[data-type="columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── 툴바 버튼 CSS tooltip (data-tooltip 속성 기반) ── */
 .hce-editor-wrapper button[data-tooltip] {
   position: relative;

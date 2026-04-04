@@ -12,10 +12,13 @@ export { PdfBlock } from "./extensions/PdfBlock";
 export { Indent } from "./extensions/Indent";
 export { FixedDetails } from "./extensions/FixedDetails";
 export { FileAttachment } from "./extensions/FileAttachment";
+export type { FileResolver, FileResolveResult } from "./extensions/FileAttachment";
 export { VideoBlock } from "./extensions/VideoBlock";
+export { Columns } from "./extensions/Columns";
+export { Column } from "./extensions/Column";
 
 // 유틸리티
-export { sanitizeHtml, stripHtmlToExcerpt } from "./utils/sanitize";
+export { sanitizeHtml, stripHtmlToExcerpt, transformLegacyHtml } from "./utils/sanitize";
 export { configurePdfJs, getPdfJs } from "./utils/pdf";
 export { cn } from "./utils/cn";
 

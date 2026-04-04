@@ -1,10 +1,12 @@
 import { type AnyExtension } from "@tiptap/core";
 import type { UploadHandler } from "../types";
+import type { FileResolver } from "../extensions/FileAttachment";
 type $$ComponentProps = {
     content: string;
     onChange: (html: string) => void;
     placeholder?: string;
     onUploadFile?: UploadHandler;
+    onResolveFile?: FileResolver;
     extensions?: AnyExtension[];
     editable?: boolean;
 };

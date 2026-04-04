@@ -18,6 +18,8 @@
     ChevronRight,
     Paperclip,
     Film,
+    Columns2,
+    Columns3,
   } from "lucide-svelte";
   import type { SlashMenuItem } from "../types";
   import type { Component } from "svelte";
@@ -111,6 +113,18 @@
           .focus()
           .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
           .run(),
+    },
+    {
+      label: "2단 컬럼",
+      keywords: "column 컬럼 2단 분할",
+      icon: Columns2,
+      command: (editor) => editor.chain().focus().setColumns(2).run(),
+    },
+    {
+      label: "3단 컬럼",
+      keywords: "column 컬럼 3단 분할",
+      icon: Columns3,
+      command: (editor) => editor.chain().focus().setColumns(3).run(),
     },
     {
       label: "YouTube 영상",

@@ -7,33 +7,62 @@ export const PdfBlock = TiptapNode.create({
     addAttributes() {
         return {
             src: { default: null },
+            fileId: { default: null },
             name: { default: "PDF" },
         };
     },
     parseHTML() {
         return [
+            // 하이브리드: data-pdf-id + data-pdf-src
+            {
+                tag: "div[data-pdf-id]",
+                getAttrs: (dom) => ({
+                    fileId: dom.getAttribute("data-pdf-id"),
+                    src: dom.getAttribute("data-pdf-src") || null,
+                    name: dom.getAttribute("data-pdf-name") || "PDF",
+                }),
+            },
+            // URL 직접 방식
             {
                 tag: "div[data-pdf-src]",
                 getAttrs: (dom) => ({
                     src: dom.getAttribute("data-pdf-src"),
+                    fileId: null,
                     name: dom.getAttribute("data-pdf-name") || "PDF",
                 }),
+            },
+            // 레거시: <embed type="application/pdf">
+            {
+                tag: 'embed[type="application/pdf"]',
+                getAttrs: (dom) => {
+                    const src = dom.getAttribute("src") || "";
+                    const name = src.split("/").pop()?.replace(/\?.*$/, "") || "PDF";
+                    return { src, fileId: null, name };
+                },
             },
         ];
     },
     renderHTML({ HTMLAttributes }) {
-        const src = HTMLAttributes.src || "";
-        const name = HTMLAttributes.name || "PDF";
+        const attrs = {};
+        if (HTMLAttributes.fileId)
+            attrs["data-pdf-id"] = HTMLAttributes.fileId;
+        if (HTMLAttributes.src)
+            attrs["data-pdf-src"] = HTMLAttributes.src;
+        attrs["data-pdf-name"] = HTMLAttributes.name || "PDF";
         return [
             "div",
-            mergeAttributes({ "data-pdf-src": src, "data-pdf-name": name }),
+            mergeAttributes(attrs),
             [
                 "p",
                 {},
                 [
                     "a",
-                    { href: src, target: "_blank", rel: "noopener noreferrer" },
-                    `\u{1F4C4} ${name} (PDF)`,
+                    {
+                        href: HTMLAttributes.src || "#",
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                    },
+                    `\u{1F4C4} ${HTMLAttributes.name || "PDF"} (PDF)`,
                 ],
             ],
         ];
@@ -58,16 +87,14 @@ export const PdfBlock = TiptapNode.create({
                 "flex items-center justify-between px-4 py-2 border-b border-border bg-background";
             wrapper.appendChild(header);
             const nameSpan = document.createElement("span");
-            nameSpan.className =
-                "text-xs text-muted-foreground truncate";
+            nameSpan.className = "text-xs text-muted-foreground truncate";
             nameSpan.style.maxWidth = "200px";
-            nameSpan.textContent = node.attrs.name || "PDF \uBB38\uC11C";
+            nameSpan.textContent = node.attrs.name || "PDF";
             header.appendChild(nameSpan);
             const btnGroup = document.createElement("div");
             btnGroup.className = "flex items-center gap-1";
             header.appendChild(btnGroup);
             const openLink = document.createElement("a");
-            openLink.href = node.attrs.src;
             openLink.target = "_blank";
             openLink.rel = "noopener noreferrer";
             openLink.className =
@@ -101,14 +128,12 @@ export const PdfBlock = TiptapNode.create({
             const canvas = document.createElement("canvas");
             canvas.className = "shadow-sm";
             contentArea.appendChild(canvas);
-            // Loading indicator
             const loadingDiv = document.createElement("div");
             loadingDiv.className = "flex items-center justify-center p-8";
             loadingDiv.innerHTML =
                 '<p class="text-sm text-muted-foreground animate-pulse">PDF \uB85C\uB529 \uC911...</p>';
             contentArea.appendChild(loadingDiv);
             canvas.style.display = "none";
-            // Navigation (added later if needed)
             let navDiv = null;
             let currentPage = 1;
             let totalPages = 0;
@@ -145,26 +170,22 @@ export const PdfBlock = TiptapNode.create({
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.scale(dpr, dpr);
                     await pageObj.render({ canvasContext: ctx, viewport }).promise;
-                    if (destroyed)
-                        return;
                 }
                 finally {
                     rendering = false;
                 }
-                // Update page counter
                 if (navDiv) {
                     const pageSpan = navDiv.querySelector(".page-counter");
                     if (pageSpan)
                         pageSpan.textContent = `${currentPage} / ${totalPages}`;
                 }
             }
-            // Load PDF
-            (async () => {
+            async function loadPdf(src) {
                 try {
                     const pdfjsLib = await getPdfJs();
                     if (destroyed)
                         return;
-                    const loadingTask = pdfjsLib.getDocument(node.attrs.src);
+                    const loadingTask = pdfjsLib.getDocument(src);
                     pdfDoc = await loadingTask.promise;
                     if (destroyed)
                         return;
@@ -179,7 +200,6 @@ export const PdfBlock = TiptapNode.create({
                         prevBtn.type = "button";
                         prevBtn.className =
                             "p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30";
-                        prevBtn.title = "\uC774\uC804 \uD398\uC774\uC9C0";
                         prevBtn.innerHTML =
                             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
                         prevBtn.addEventListener("click", () => {
@@ -199,7 +219,6 @@ export const PdfBlock = TiptapNode.create({
                         nextBtn.type = "button";
                         nextBtn.className =
                             "p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30";
-                        nextBtn.title = "\uB2E4\uC74C \uD398\uC774\uC9C0";
                         nextBtn.innerHTML =
                             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
                         nextBtn.addEventListener("click", () => {
@@ -214,19 +233,44 @@ export const PdfBlock = TiptapNode.create({
                         wrapper.appendChild(navDiv);
                     }
                     renderPage();
-                    // ResizeObserver
                     resizeObserver = new ResizeObserver(() => {
                         clearTimeout(resizeTimeout);
                         resizeTimeout = setTimeout(renderPage, 100);
                     });
                     resizeObserver.observe(contentArea);
                 }
-                catch (e) {
-                    console.error("[PdfBlockView] PDF \uB85C\uB4DC \uC2E4\uD328:", node.attrs.src, e);
+                catch {
                     loadingDiv.innerHTML =
                         '<p class="text-sm text-muted-foreground">PDF\uB97C \uBD88\uB7EC\uC62C \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.</p>';
                 }
-            })();
+            }
+            // URL 해결 후 PDF 로드
+            if (node.attrs.src) {
+                openLink.href = node.attrs.src;
+                loadPdf(node.attrs.src);
+            }
+            else if (node.attrs.fileId) {
+                // resolver로 URL 획득
+                openLink.href = "#";
+                const resolver = editor.storage.fileAttachment?.resolver;
+                if (resolver) {
+                    resolver(node.attrs.fileId)
+                        .then((result) => {
+                        openLink.href = result.src;
+                        if (result.name)
+                            nameSpan.textContent = result.name;
+                        loadPdf(result.src);
+                    })
+                        .catch(() => {
+                        loadingDiv.innerHTML =
+                            '<p class="text-sm text-muted-foreground">PDF URL\uC744 \uD655\uC778\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.</p>';
+                    });
+                }
+                else {
+                    loadingDiv.innerHTML =
+                        `<p class="text-sm text-muted-foreground">PDF ID: ${node.attrs.fileId}</p>`;
+                }
+            }
             return {
                 dom,
                 update: (updatedNode) => {
@@ -250,5 +294,8 @@ export const PdfBlock = TiptapNode.create({
                 },
             };
         };
+    },
+    addStorage() {
+        return {};
     },
 });

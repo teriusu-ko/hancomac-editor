@@ -39,6 +39,8 @@
     ChevronRight,
     Paperclip,
     Film,
+    Columns2,
+    Columns3,
   } from "lucide-svelte";
   import { cn } from "../utils/cn";
   import InputModal from "./InputModal.svelte";
@@ -461,6 +463,31 @@
       <Paperclip size={iconSize} />
     </button>
   {/if}
+
+  <!-- Columns -->
+  <button
+    type="button"
+    onclick={() => editor.chain().focus().setColumns(2).run()}
+    data-tooltip="2단 컬럼"
+    aria-label="2단 컬럼"
+    class={cn(
+      "p-1.5 rounded-md transition-colors",
+      editor.isActive("columns")
+        ? "bg-primary/10 text-primary"
+        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+    )}
+  >
+    <Columns2 size={iconSize} />
+  </button>
+  <button
+    type="button"
+    onclick={() => editor.chain().focus().setColumns(3).run()}
+    data-tooltip="3단 컬럼"
+    aria-label="3단 컬럼"
+    class="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+  >
+    <Columns3 size={iconSize} />
+  </button>
 
   <!-- Table menu -->
   <div bind:this={tableMenuEl} class="relative">

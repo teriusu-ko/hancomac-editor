@@ -31,6 +31,9 @@
   import { Extension, type AnyExtension } from "@tiptap/core";
   import { TextSelection } from "@tiptap/pm/state";
   import { PdfBlock } from "../extensions/PdfBlock";
+  import { Columns } from "../extensions/Columns";
+  import { Column } from "../extensions/Column";
+  import { transformLegacyHtml } from "../utils/sanitize";
   import { Indent } from "../extensions/Indent";
   import { FileAttachment } from "../extensions/FileAttachment";
   import { VideoBlock } from "../extensions/VideoBlock";
@@ -39,6 +42,7 @@
   import SlashCommandMenu from "./SlashCommandMenu.svelte";
   import TableBubbleMenu from "./TableBubbleMenu.svelte";
   import type { UploadHandler } from "../types";
+  import type { FileResolver } from "../extensions/FileAttachment";
 
   const cellAttrs = {
     backgroundColor: {
@@ -107,6 +111,7 @@
     onChange,
     placeholder = "'/'를 눌러 명령어를 입력하세요...",
     onUploadFile,
+    onResolveFile,
     extensions: extraExtensions = [],
     editable = true,
   }: {
@@ -114,6 +119,7 @@
     onChange: (html: string) => void;
     placeholder?: string;
     onUploadFile?: UploadHandler;
+    onResolveFile?: FileResolver;
     extensions?: AnyExtension[];
     editable?: boolean;
   } = $props();
@@ -345,6 +351,8 @@
         PdfBlock,
         FileAttachment,
         VideoBlock,
+        Columns,
+        Column,
         CodeBlockTopEscape,
         Indent,
         FixedDetails,
@@ -444,7 +452,7 @@
             ]
           : []),
       ],
-      content,
+      content: transformLegacyHtml(content),
       editable,
       onUpdate: ({ editor: e }) => {
         const html = e
@@ -466,6 +474,11 @@
         editor = editor;
       },
     });
+
+    // File resolver를 storage에 등록
+    if (onResolveFile) {
+      editor.storage.fileAttachment = { resolver: onResolveFile };
+    }
 
     editor.on("update", handleUpdate);
     editor.on("selectionUpdate", handleSelectionUpdate);
@@ -511,7 +524,8 @@
     if (!editor) return;
     // 에디터 자체 onChange에서 나온 값이면 무시 (무한 루프 방지)
     if (content === lastEmittedHtml) return;
-    editor.commands.setContent(content, { emitUpdate: false });
+    const transformed = transformLegacyHtml(content);
+    editor.commands.setContent(transformed, { emitUpdate: false });
     lastEmittedHtml = content;
     editor.commands.fixTables();
   });
