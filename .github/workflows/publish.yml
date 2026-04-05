@@ -30,7 +30,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           LOCAL=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view @teriusu/rich-editor version 2>/dev/null || echo "0.0.0")
+          PUBLISHED=$(npm view @hancomac/rich-editor version 2>/dev/null || echo "0.0.0")
           echo "Local: $LOCAL, Published: $PUBLISHED"
           if [ "$LOCAL" = "$PUBLISHED" ]; then
             echo "Version unchanged — auto bumping patch"
