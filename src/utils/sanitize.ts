@@ -6,6 +6,7 @@ const ALLOWED_TAGS = new Set([
   "blockquote", "pre", "code", "img", "figure", "figcaption",
   "table", "colgroup", "col", "thead", "tbody", "tr", "th", "td",
   "span", "div", "hr", "sub", "sup",
+  "tiptap-midibus",
 ]);
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
@@ -18,6 +19,7 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   div: new Set(["data-pdf-src", "data-pdf-name"]),
   pre: new Set(["class"]),
   code: new Set(["class"]),
+  "tiptap-midibus": new Set(["id", "start", "uuid", "width", "height"]),
   "*": new Set(["class", "id"]),
 };
 
@@ -66,7 +68,7 @@ function sanitizeAttributes(tag: string, attrString: string): string {
 /**
  * 레거시 TipTap v2 커스텀 태그를 현재 형식으로 변환.
  * 에디터 content 로드 전, 또는 게시물 렌더링 전에 호출.
- * tiptap-file → data-file-id, tiptap-midibus → iframe으로 변환.
+ * tiptap-file → data-file-id 변환. tiptap-midibus는 호스트 앱이 처리.
  */
 export function transformLegacyHtml(html: string): string {
   if (!html) return html;
@@ -111,19 +113,6 @@ export function transformLegacyHtml(html: string): string {
           const name = text.trim() || "\uD30C\uC77C";
           return `<div data-file-id="${id}" data-file-name="${name}"></div>`;
         },
-      )
-      // <tiptap-midibus id="X" ...></tiptap-midibus> + 뒤따르는 iframe-wrapper 제거
-      // → <div data-youtube-video><iframe src="https://play.mbus.tv/v1/hls/X" allowfullscreen></iframe></div>
-      .replace(
-        /<tiptap-midibus\s+id="([^"]*)"[^>]*>(?:<\/tiptap-midibus>)?/gi,
-        (_match, id: string) => {
-          return `<div data-youtube-video=""><iframe src="https://play.mbus.tv/v1/hls/${id}" width="100%" height="400" frameborder="0" allowfullscreen="true"></iframe></div>`;
-        },
-      )
-      // 미디버스 뒤에 따라오는 빈 iframe-wrapper 제거
-      .replace(
-        /<div\s+class="iframe-wrapper"[^>]*>[\s\S]*?<\/div>/gi,
-        "",
       )
       // <div class="tiptap-columns"> → <div data-type="columns">
       .replace(

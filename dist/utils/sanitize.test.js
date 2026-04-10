@@ -22,13 +22,11 @@ describe('transformLegacyHtml', () => {
         const result = transformLegacyHtml(input);
         expect(result).toContain('data-file-name="파일"');
     });
-    it('converts <tiptap-midibus id="X"> to iframe', () => {
+    it('preserves <tiptap-midibus> for host app custom extension', () => {
         const input = '<tiptap-midibus id="vid123"></tiptap-midibus>';
         const result = transformLegacyHtml(input);
-        expect(result).toContain('data-youtube-video');
-        expect(result).toContain('https://play.mbus.tv/v1/hls/vid123');
-        expect(result).toContain('iframe');
-        expect(result).not.toContain('tiptap-midibus');
+        expect(result).toContain('tiptap-midibus');
+        expect(result).toContain('id="vid123"');
     });
     it('converts <tiptap-collapsable title="X"> to <details><summary>', () => {
         const input = '<tiptap-collapsable title="Click me">Hidden content</tiptap-collapsable>';
@@ -73,10 +71,10 @@ describe('transformLegacyHtml', () => {
         expect(result).toContain('Before');
         expect(result).toContain('After');
     });
-    it('removes iframe-wrapper divs after midibus conversion', () => {
+    it('preserves midibus with trailing iframe-wrapper intact', () => {
         const input = '<tiptap-midibus id="vid"></tiptap-midibus><div class="iframe-wrapper"><iframe></iframe></div>';
         const result = transformLegacyHtml(input);
-        expect(result).not.toContain('iframe-wrapper');
+        expect(result).toContain('tiptap-midibus');
     });
     it('parses margin-left: 40px via Indent extension (not transformLegacyHtml itself)', () => {
         // transformLegacyHtml does NOT handle margin-left; the Indent extension does.
