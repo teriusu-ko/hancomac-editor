@@ -22,8 +22,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT }}
 
       - uses: actions/setup-node@v4
         with:
@@ -43,14 +41,17 @@ jobs:
           LOCAL=$(node -p "require('./package.json').version")
           PUBLISHED=$(npm view @teriusu/rich-editor version 2>/dev/null || echo "0.0.0")
           echo "Local: $LOCAL, Published: $PUBLISHED"
-          if [ "$LOCAL" = "$PUBLISHED" ]; then
-            echo "Version unchanged — auto bumping patch"
+          HIGHEST=$(printf "%s\n%s" "$LOCAL" "$PUBLISHED" | sort -V | tail -1)
+          if [ "$LOCAL" = "$HIGHEST" ] && [ "$LOCAL" != "$PUBLISHED" ]; then
+            echo "LOCAL ($LOCAL) is ahead of PUBLISHED ($PUBLISHED) — use as-is"
+            echo "BUMPED=false" >> "$GITHUB_ENV"
+          else
+            # LOCAL == PUBLISHED (normal auto-bump) or LOCAL < PUBLISHED (prev run published but failed to commit-back)
+            echo "Bumping patch from PUBLISHED ($PUBLISHED)"
+            npm version "$PUBLISHED" --no-git-tag-version --allow-same-version
             npm version patch --no-git-tag-version
             LOCAL=$(node -p "require('./package.json').version")
             echo "BUMPED=true" >> "$GITHUB_ENV"
-          else
-            echo "Version already bumped manually"
-            echo "BUMPED=false" >> "$GITHUB_ENV"
           fi
           echo "VERSION=$LOCAL" >> "$GITHUB_ENV"
 
