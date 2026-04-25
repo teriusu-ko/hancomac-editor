@@ -195,7 +195,7 @@ npm test               # vitest
 
 publish 성공 시 `repository_dispatch` (`rich-editor-published`) 이벤트가 다음 repo로 전송되고, 각 repo의 `update-*` 워크플로우가 `package.json`을 새 버전으로 업데이트 + 커밋:
 - `teriusu-ko/hancomac` → `@teriusu/rich-editor`
-- `HancomAC/arcturus-next` → `apps/jungol`, `apps/codepass`의 `@teriusu/rich-editor`
+- `HancomAC/trinity` → `apps/jungol`, `apps/codepass`의 `@teriusu/rich-editor`
 
 `teriusu-ko/teriusu`는 현재 수동 업데이트 (hook 미설정 — `GH_PAT` secret 추가 시 연결 가능).
 

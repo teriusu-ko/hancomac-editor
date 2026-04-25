@@ -85,7 +85,7 @@ jobs:
 
       - name: Trigger downstream updates
         run: |
-          for REPO in "teriusu-ko/hancomac" "HancomAC/arcturus-next"; do
+          for REPO in "teriusu-ko/hancomac" "HancomAC/trinity"; do
             curl -s -X POST \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \

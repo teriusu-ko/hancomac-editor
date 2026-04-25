@@ -5,6 +5,9 @@
 
   let { src, fileName }: { src: string; fileName?: string } = $props();
 
+  const cleanName = (raw?: string) =>
+    (raw || "").replace(/[?#].*$/, "").trim() || "PDF 문서";
+
   let canvasEl: HTMLCanvasElement | undefined = $state();
   let containerEl: HTMLDivElement | undefined = $state();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,7 +24,7 @@
     try {
       const pageObj = await pdf.getPage(page);
       const unscaledViewport = pageObj.getViewport({ scale: 1 });
-      const availableWidth = containerEl.clientWidth - 32;
+      const availableWidth = containerEl.clientWidth;
       if (availableWidth <= 0) return;
       const scale = availableWidth / unscaledViewport.width;
       const viewport = pageObj.getViewport({ scale });
@@ -102,12 +105,12 @@
     <p class="text-sm text-muted-foreground animate-pulse">PDF 로딩 중...</p>
   </div>
 {:else}
-  <div class="border border-border rounded-lg overflow-hidden bg-muted/30 my-4">
+  <div class="border border-border rounded-lg overflow-hidden my-4">
     <div
-      class="flex items-center justify-between px-4 py-2 border-b border-border bg-background"
+      class="flex items-center justify-between px-4 py-2 border-b border-border bg-muted"
     >
       <span class="text-xs text-muted-foreground truncate">
-        {fileName || "PDF 문서"}
+        {cleanName(fileName)}
       </span>
       <span class="text-xs text-muted-foreground tabular-nums">
         {page} / {total}
@@ -116,14 +119,14 @@
 
     <div
       bind:this={containerEl}
-      class="flex items-center justify-center p-4 bg-neutral-100 dark:bg-neutral-900"
+      class="flex items-center justify-center"
     >
       <canvas bind:this={canvasEl} class="shadow-sm"></canvas>
     </div>
 
     {#if total > 1}
       <div
-        class="flex items-center justify-center gap-4 px-4 py-2 border-t border-border bg-background"
+        class="flex items-center justify-center gap-4 px-4 py-2 border-t border-border bg-muted"
       >
         <button
           type="button"

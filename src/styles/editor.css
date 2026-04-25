@@ -260,7 +260,6 @@
 }
 
 .tiptap [data-type="pdfBlock"].ProseMirror-selectednode > div {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
   border-radius: 8px;
 }
 
@@ -712,3 +711,4 @@
   pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 60;
 }
 .hce-table-btn-wrap:hover .hce-table-btn-tooltip { opacity: 1; }
+

@@ -39,7 +39,7 @@ export const PdfBlock = TiptapNode.create({
                 tag: 'embed[type="application/pdf"]',
                 getAttrs: (dom) => {
                     const src = dom.getAttribute("src") || "";
-                    const name = src.split("/").pop()?.replace(/\?.*$/, "") || "PDF";
+                    const name = src.split("/").pop()?.replace(/[?#].*$/, "") || "PDF";
                     return { src, fileId: null, name, width: null };
                 },
             },
@@ -163,12 +163,15 @@ export const PdfBlock = TiptapNode.create({
             // Header
             const header = document.createElement("div");
             header.className =
-                "flex items-center justify-between px-4 py-2 border-b border-border bg-background";
+                "flex items-center justify-between px-4 py-2 border-b border-border";
+            header.style.background = "var(--muted)";
             wrapper.appendChild(header);
+            const cleanName = (raw) => (raw || "").replace(/[?#].*$/, "").trim() || "PDF";
             const nameSpan = document.createElement("span");
-            nameSpan.className = "text-xs text-muted-foreground truncate";
+            nameSpan.className = "text-xs text-muted-foreground truncate select-none";
             nameSpan.style.maxWidth = "200px";
-            nameSpan.textContent = node.attrs.name || "PDF";
+            nameSpan.style.userSelect = "none";
+            nameSpan.textContent = cleanName(node.attrs.name);
             header.appendChild(nameSpan);
             const btnGroup = document.createElement("div");
             btnGroup.className = "flex items-center gap-1";
@@ -201,8 +204,7 @@ export const PdfBlock = TiptapNode.create({
             btnGroup.appendChild(deleteBtn);
             // Content area
             const contentArea = document.createElement("div");
-            contentArea.className =
-                "flex items-center justify-center p-4 bg-neutral-100 dark:bg-neutral-900";
+            contentArea.className = "flex items-center justify-center";
             wrapper.appendChild(contentArea);
             const canvas = document.createElement("canvas");
             canvas.className = "shadow-sm";
@@ -228,7 +230,7 @@ export const PdfBlock = TiptapNode.create({
                     if (destroyed)
                         return;
                     const unscaledViewport = pageObj.getViewport({ scale: 1 });
-                    const availableWidth = contentArea.clientWidth - 32;
+                    const availableWidth = contentArea.clientWidth;
                     if (availableWidth <= 0) {
                         rendering = false;
                         return;
@@ -274,11 +276,12 @@ export const PdfBlock = TiptapNode.create({
                     if (totalPages > 1) {
                         navDiv = document.createElement("div");
                         navDiv.className =
-                            "flex items-center justify-center gap-4 px-4 py-2 border-t border-border bg-background";
+                            "flex items-center justify-center gap-4 px-4 py-2 border-t border-border";
+                        navDiv.style.background = "var(--muted)";
                         const prevBtn = document.createElement("button");
                         prevBtn.type = "button";
                         prevBtn.className =
-                            "p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30";
+                            "p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30 text-foreground";
                         prevBtn.innerHTML =
                             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
                         prevBtn.addEventListener("click", () => {
@@ -291,13 +294,14 @@ export const PdfBlock = TiptapNode.create({
                         });
                         navDiv.appendChild(prevBtn);
                         const pageSpan = document.createElement("span");
-                        pageSpan.className = "text-sm tabular-nums page-counter";
+                        pageSpan.className = "text-sm tabular-nums page-counter select-none";
+                        pageSpan.style.userSelect = "none";
                         pageSpan.textContent = `1 / ${totalPages}`;
                         navDiv.appendChild(pageSpan);
                         const nextBtn = document.createElement("button");
                         nextBtn.type = "button";
                         nextBtn.className =
-                            "p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30";
+                            "p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30 text-foreground";
                         nextBtn.innerHTML =
                             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
                         nextBtn.addEventListener("click", () => {
@@ -366,15 +370,8 @@ export const PdfBlock = TiptapNode.create({
                     }
                     return true;
                 },
-                selectNode: () => {
-                    wrapper.style.borderColor = "var(--primary)";
-                    wrapper.style.boxShadow =
-                        "0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent)";
-                },
-                deselectNode: () => {
-                    wrapper.style.borderColor = "var(--border)";
-                    wrapper.style.boxShadow = "none";
-                },
+                selectNode: () => { },
+                deselectNode: () => { },
                 destroy: () => {
                     destroyed = true;
                     clearTimeout(resizeTimeout);
