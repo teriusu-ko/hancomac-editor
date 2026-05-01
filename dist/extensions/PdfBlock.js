@@ -82,6 +82,7 @@ export const PdfBlock = TiptapNode.create({
             const dom = document.createElement("div");
             dom.classList.add("my-4");
             dom.contentEditable = "false";
+            dom.setAttribute("data-type", "pdfBlock");
             dom.setAttribute("data-drag-handle", "");
             dom.setAttribute("data-node-view-wrapper", "");
             dom.style.position = "relative";
@@ -185,23 +186,25 @@ export const PdfBlock = TiptapNode.create({
             openLink.innerHTML =
                 '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
             btnGroup.appendChild(openLink);
-            const deleteBtn = document.createElement("button");
-            deleteBtn.type = "button";
-            deleteBtn.className =
-                "p-1 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive";
-            deleteBtn.title = "\uC0AD\uC81C";
-            deleteBtn.innerHTML =
-                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>';
-            deleteBtn.addEventListener("click", () => {
-                const pos = getPos();
-                if (pos != null) {
-                    editor.commands.deleteRange({
-                        from: pos,
-                        to: pos + node.nodeSize,
-                    });
-                }
-            });
-            btnGroup.appendChild(deleteBtn);
+            if (editor.isEditable) {
+                const deleteBtn = document.createElement("button");
+                deleteBtn.type = "button";
+                deleteBtn.className =
+                    "p-1 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive";
+                deleteBtn.title = "\uC0AD\uC81C";
+                deleteBtn.innerHTML =
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>';
+                deleteBtn.addEventListener("click", () => {
+                    const pos = getPos();
+                    if (pos != null) {
+                        editor.commands.deleteRange({
+                            from: pos,
+                            to: pos + node.nodeSize,
+                        });
+                    }
+                });
+                btnGroup.appendChild(deleteBtn);
+            }
             // Content area
             const contentArea = document.createElement("div");
             contentArea.className = "flex items-center justify-center";

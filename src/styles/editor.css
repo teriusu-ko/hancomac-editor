@@ -250,10 +250,6 @@
   transition: box-shadow 0.15s;
 }
 
-.tiptap img.ProseMirror-selectednode {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
-}
-
 /* ── YouTube / PDF 선택 힌트 ── */
 .tiptap div[data-youtube-video].ProseMirror-selectednode iframe {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
@@ -557,7 +553,7 @@
 }
 
 .ProseMirror-selectednode:not(img):not([data-youtube-video]):not([data-type="pdfBlock"])::before,
-.ProseMirror-selectednoderange::before {
+.ProseMirror-selectednoderange:not([data-type="pdfBlock"])::before {
   content: "";
   position: absolute;
   inset: -0.25rem;
@@ -663,7 +659,7 @@
   border-radius: 8px;
 }
 
-.tiptap div[data-type="column"]:focus-within {
+.tiptap[contenteditable="true"] div[data-type="column"]:focus-within {
   border-color: var(--primary);
   border-style: solid;
 }
