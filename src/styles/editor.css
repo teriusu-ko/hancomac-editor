@@ -35,18 +35,19 @@
 }
 
 .tiptap > * + * {
-  margin-top: 0.5em;
+  margin-top: 0.25em;
 }
 
 /* ── 텍스트 블록 ── */
 .tiptap p {
-  margin: 0.25em 0;
+  margin: 0.1em 0 !important;
+  line-height: 1.5 !important;
 }
 
 /* 빈 행 높이 보존 */
 .tiptap p:empty,
 .tiptap p:has(> br:only-child) {
-  min-height: 1.8em;
+  min-height: 1.2em;
 }
 
 /* 선행 공백 보존 */

@@ -177,6 +177,38 @@ export const PdfBlock = TiptapNode.create({
             const btnGroup = document.createElement("div");
             btnGroup.className = "flex items-center gap-1";
             header.appendChild(btnGroup);
+            const downloadLink = document.createElement("a");
+            downloadLink.rel = "noopener noreferrer";
+            downloadLink.setAttribute("download", cleanName(node.attrs.name));
+            downloadLink.className =
+                "p-1 rounded hover:bg-muted transition-colors text-muted-foreground cursor-pointer";
+            downloadLink.title = "\uB2E4\uC6B4\uB85C\uB4DC";
+            downloadLink.innerHTML =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+            downloadLink.addEventListener("click", async (e) => {
+                if (!downloadLink.href)
+                    return;
+                e.preventDefault();
+                const fileName = downloadLink.getAttribute("download") || cleanName(node.attrs.name);
+                try {
+                    const res = await fetch(downloadLink.href);
+                    if (!res.ok)
+                        throw new Error(String(res.status));
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }
+                catch {
+                    window.open(downloadLink.href, "_blank", "noopener,noreferrer");
+                }
+            });
+            btnGroup.appendChild(downloadLink);
             const openLink = document.createElement("a");
             openLink.target = "_blank";
             openLink.rel = "noopener noreferrer";
@@ -340,23 +372,28 @@ export const PdfBlock = TiptapNode.create({
                     // fileId 있으면 프록시 URL 사용 (경로 숨김)
                     const proxyUrl = getProxyUrl(node.attrs.fileId);
                     openLink.href = proxyUrl;
+                    downloadLink.href = proxyUrl;
                     loadPdf(proxyUrl);
                 }
                 else {
                     openLink.href = node.attrs.src;
+                    downloadLink.href = node.attrs.src;
                     loadPdf(node.attrs.src);
                 }
             }
             else if (node.attrs.fileId) {
                 const proxyUrl = getProxyUrl(node.attrs.fileId);
                 openLink.href = proxyUrl;
+                downloadLink.href = proxyUrl;
                 // resolver로 이름 획득
                 const resolver = editor.storage.fileAttachment?.resolver;
                 if (resolver) {
                     resolver(node.attrs.fileId)
                         .then((result) => {
-                        if (result.name)
+                        if (result.name) {
                             nameSpan.textContent = result.name;
+                            downloadLink.setAttribute("download", result.name);
+                        }
                     })
                         .catch(() => { });
                 }
