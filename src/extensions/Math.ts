@@ -52,7 +52,7 @@ function buildNodeView(displayMode: boolean) {
 
 export const MathInline = Node.create<MathOptions>({
   name: "math_inline",
-  group: "inline math",
+  group: "inline",
   inline: true,
   atom: true,
   content: "text*",
@@ -92,9 +92,10 @@ export const MathInline = Node.create<MathOptions>({
 
 export const MathDisplay = Node.create<MathOptions>({
   name: "math_display",
-  group: "block math",
+  group: "block",
   atom: true,
   content: "text*",
+  code: true,
   selectable: true,
   defining: true,
 

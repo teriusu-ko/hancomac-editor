@@ -36,7 +36,7 @@ function buildNodeView(displayMode) {
 }
 export const MathInline = Node.create({
     name: "math_inline",
-    group: "inline math",
+    group: "inline",
     inline: true,
     atom: true,
     content: "text*",
@@ -66,9 +66,10 @@ export const MathInline = Node.create({
 });
 export const MathDisplay = Node.create({
     name: "math_display",
-    group: "block math",
+    group: "block",
     atom: true,
     content: "text*",
+    code: true,
     selectable: true,
     defining: true,
     addOptions() {
