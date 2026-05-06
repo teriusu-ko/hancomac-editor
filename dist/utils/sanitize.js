@@ -6,6 +6,7 @@ const ALLOWED_TAGS = new Set([
     "table", "colgroup", "col", "thead", "tbody", "tr", "th", "td",
     "span", "div", "hr", "sub", "sup",
     "tiptap-midibus",
+    "math-inline", "math-display",
 ]);
 const ALLOWED_ATTRS = {
     a: new Set(["href", "title", "target", "rel"]),

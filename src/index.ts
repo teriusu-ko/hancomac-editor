@@ -16,6 +16,7 @@ export type { FileResolver, FileResolveResult } from "./extensions/FileAttachmen
 export { VideoBlock } from "./extensions/VideoBlock";
 export { Columns } from "./extensions/Columns";
 export { Column } from "./extensions/Column";
+export { MathInline, MathDisplay } from "./extensions/Math";
 
 // 유틸리티
 export { sanitizeHtml, stripHtmlToExcerpt, transformLegacyHtml } from "./utils/sanitize";

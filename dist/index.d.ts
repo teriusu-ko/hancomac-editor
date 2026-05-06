@@ -13,6 +13,7 @@ export type { FileResolver, FileResolveResult } from "./extensions/FileAttachmen
 export { VideoBlock } from "./extensions/VideoBlock";
 export { Columns } from "./extensions/Columns";
 export { Column } from "./extensions/Column";
+export { MathInline, MathDisplay } from "./extensions/Math";
 export { sanitizeHtml, stripHtmlToExcerpt, transformLegacyHtml } from "./utils/sanitize";
 export { configurePdfJs, getPdfJs } from "./utils/pdf";
 export { cn } from "./utils/cn";
