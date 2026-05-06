@@ -60,6 +60,7 @@
     "@tiptap/starter-kit": "^3.22.0",
     "clsx": "^2.1.1",
     "highlight.js": "^11.11.1",
+    "katex": "^0.16.45",
     "lowlight": "^3.3.0",
     "lucide-svelte": "^0.477.0",
     "tailwind-merge": "^3.0.0"
