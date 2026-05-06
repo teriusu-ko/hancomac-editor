@@ -113,6 +113,7 @@
     placeholder = "'/'를 눌러 명령어를 입력하세요...",
     onUploadFile,
     onResolveFile,
+    fileDownloadBaseUrl,
     onPromptLink,
     onPromptImage,
     extensions: extraExtensions = [],
@@ -125,6 +126,7 @@
     placeholder?: string;
     onUploadFile?: UploadHandler;
     onResolveFile?: FileResolver;
+    fileDownloadBaseUrl?: string;
     onPromptLink?: PromptHandler;
     onPromptImage?: PromptHandler;
     extensions?: AnyExtension[];
@@ -370,7 +372,10 @@
         CustomTableHeader,
         CustomTableCell,
         PdfBlock,
-        FileAttachment,
+        FileAttachment.configure({
+          resolver: onResolveFile ?? null,
+          ...(fileDownloadBaseUrl ? { downloadBaseUrl: fileDownloadBaseUrl } : {}),
+        }),
         VideoBlock,
         Columns,
         Column,
@@ -495,14 +500,6 @@
         editor = editor;
       },
     });
-
-    // File resolver를 storage에 등록
-    if (onResolveFile) {
-      editor.storage.fileAttachment = {
-        ...editor.storage.fileAttachment,
-        resolver: onResolveFile,
-      };
-    }
 
     editor.on("update", handleUpdate);
     editor.on("selectionUpdate", handleSelectionUpdate);

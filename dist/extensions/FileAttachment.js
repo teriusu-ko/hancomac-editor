@@ -8,7 +8,7 @@ function formatFileSize(bytes) {
 }
 function isInlineable(name) {
     const ext = name.split(".").pop()?.toLowerCase() || "";
-    return ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext);
+    return ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "txt", "html", "htm"].includes(ext);
 }
 function getFileIcon(name) {
     const ext = name.split(".").pop()?.toLowerCase() || "";
@@ -36,7 +36,7 @@ export const FileAttachment = Node.create({
     atom: true,
     draggable: true,
     addOptions() {
-        return { HTMLAttributes: {} };
+        return { HTMLAttributes: {}, resolver: null, downloadBaseUrl: "/api/upload" };
     },
     addAttributes() {
         return {
@@ -168,15 +168,14 @@ export const FileAttachment = Node.create({
                     sizeEl.textContent = formatFileSize(node.attrs.size);
             }
             else if (node.attrs.fileId) {
-                // ID만 있으면 resolver로 해결 시도
-                nameEl.disabled = true;
-                sizeEl.textContent = "loading...";
+                // fileId만 있어도 proxy URL로 다운로드 가능 — 버튼은 항상 활성.
+                // resolver가 있으면 이름/크기 메타데이터를 채운다.
                 const resolver = editor.storage.fileAttachment?.resolver;
                 if (resolver) {
+                    sizeEl.textContent = "loading...";
                     resolver(node.attrs.fileId)
                         .then((result) => {
                         resolvedSrc = result.src;
-                        nameEl.disabled = false;
                         if (result.name) {
                             resolvedName = result.name;
                             nameEl.textContent = result.name;
@@ -185,11 +184,8 @@ export const FileAttachment = Node.create({
                         sizeEl.textContent = result.size ? formatFileSize(result.size) : "";
                     })
                         .catch(() => {
-                        sizeEl.textContent = "resolve failed";
+                        sizeEl.textContent = "";
                     });
-                }
-                else {
-                    sizeEl.textContent = `ID: ${node.attrs.fileId}`;
                 }
             }
             dom.appendChild(icon);
@@ -220,8 +216,8 @@ export const FileAttachment = Node.create({
     },
     addStorage() {
         return {
-            resolver: null,
-            downloadBaseUrl: "/api/upload",
+            resolver: this.options.resolver,
+            downloadBaseUrl: this.options.downloadBaseUrl,
         };
     },
     addCommands() {

@@ -7,6 +7,7 @@ type $$ComponentProps = {
     placeholder?: string;
     onUploadFile?: UploadHandler;
     onResolveFile?: FileResolver;
+    fileDownloadBaseUrl?: string;
     onPromptLink?: PromptHandler;
     onPromptImage?: PromptHandler;
     extensions?: AnyExtension[];

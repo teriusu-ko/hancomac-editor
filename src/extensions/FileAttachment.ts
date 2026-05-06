@@ -1,11 +1,13 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 
-export interface FileAttachmentOptions {
-  HTMLAttributes: Record<string, unknown>;
-}
-
 export type FileResolveResult = { src: string; name?: string; size?: number };
 export type FileResolver = (fileId: string) => Promise<FileResolveResult>;
+
+export interface FileAttachmentOptions {
+  HTMLAttributes: Record<string, unknown>;
+  resolver: FileResolver | null;
+  downloadBaseUrl: string;
+}
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -28,7 +30,7 @@ function formatFileSize(bytes: number): string {
 
 function isInlineable(name: string): boolean {
   const ext = name.split(".").pop()?.toLowerCase() || "";
-  return ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext);
+  return ["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "txt", "html", "htm"].includes(ext);
 }
 
 function getFileIcon(name: string): string {
@@ -59,7 +61,7 @@ export const FileAttachment = Node.create<FileAttachmentOptions>({
   draggable: true,
 
   addOptions() {
-    return { HTMLAttributes: {} };
+    return { HTMLAttributes: {}, resolver: null, downloadBaseUrl: "/api/upload" };
   },
 
   addAttributes() {
@@ -195,16 +197,14 @@ export const FileAttachment = Node.create<FileAttachmentOptions>({
         resolvedSrc = node.attrs.src;
         if (node.attrs.size) sizeEl.textContent = formatFileSize(node.attrs.size);
       } else if (node.attrs.fileId) {
-        // ID만 있으면 resolver로 해결 시도
-        nameEl.disabled = true;
-        sizeEl.textContent = "loading...";
-
+        // fileId만 있어도 proxy URL로 다운로드 가능 — 버튼은 항상 활성.
+        // resolver가 있으면 이름/크기 메타데이터를 채운다.
         const resolver = editor.storage.fileAttachment?.resolver as FileResolver | undefined;
         if (resolver) {
+          sizeEl.textContent = "loading...";
           resolver(node.attrs.fileId)
             .then((result) => {
               resolvedSrc = result.src;
-              nameEl.disabled = false;
               if (result.name) {
                 resolvedName = result.name;
                 nameEl.textContent = result.name;
@@ -213,10 +213,8 @@ export const FileAttachment = Node.create<FileAttachmentOptions>({
               sizeEl.textContent = result.size ? formatFileSize(result.size) : "";
             })
             .catch(() => {
-              sizeEl.textContent = "resolve failed";
+              sizeEl.textContent = "";
             });
-        } else {
-          sizeEl.textContent = `ID: ${node.attrs.fileId}`;
         }
       }
 
@@ -251,8 +249,8 @@ export const FileAttachment = Node.create<FileAttachmentOptions>({
 
   addStorage() {
     return {
-      resolver: null as FileResolver | null,
-      downloadBaseUrl: "/api/upload" as string,
+      resolver: this.options.resolver as FileResolver | null,
+      downloadBaseUrl: this.options.downloadBaseUrl as string,
     };
   },
 

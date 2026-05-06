@@ -1,13 +1,15 @@
 import { Node } from "@tiptap/core";
-export interface FileAttachmentOptions {
-    HTMLAttributes: Record<string, unknown>;
-}
 export type FileResolveResult = {
     src: string;
     name?: string;
     size?: number;
 };
 export type FileResolver = (fileId: string) => Promise<FileResolveResult>;
+export interface FileAttachmentOptions {
+    HTMLAttributes: Record<string, unknown>;
+    resolver: FileResolver | null;
+    downloadBaseUrl: string;
+}
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         fileAttachment: {
