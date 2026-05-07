@@ -278,17 +278,17 @@
   padding: 0.05em 0.1em;
 }
 
-/* ── 접기/펼치기 (Details) ── */
+/* ── 접기/펼치기 (Details) — Collapsable 컴포넌트와 시각 통일 ── */
 /* 에디터 내부: TipTap node view (div[data-type="details"]) */
 .tiptap [data-type="details"] {
   border: none;
   border-radius: 0;
-  padding: 0.25em 0;
+  padding: 0;
   margin: 0.5em 0;
   background: transparent;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.25em;
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
 }
 
 .tiptap [data-type="details"] > button {
@@ -296,16 +296,16 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  width: 1.4em;
-  height: 1.4em;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--muted-foreground);
   border-radius: 4px;
-  transition: transform 0.15s, background 0.15s;
+  transition: transform 0.2s, background 0.15s;
   flex-shrink: 0;
-  margin-top: 0.25em;
+  margin-top: 11px;
 }
 
 .tiptap [data-type="details"] > button::after {
@@ -336,14 +336,14 @@
 .tiptap [data-type="details"] summary {
   font-weight: 600;
   cursor: text;
-  padding: 0.25em 0;
+  padding: 10px 0;
   display: block;
+  border-bottom: 1px solid var(--border, #f6f7f9);
 }
 
 .tiptap [data-type="detailsContent"] {
-  margin-top: 0.5em;
-  padding-left: 0.5em;
-  border-left: 2px solid var(--border);
+  padding: 8px 0 8px 0;
+  border-left: none;
 }
 
 .tiptap [data-type="detailsContent"][hidden] {
@@ -352,26 +352,52 @@
 
 /* 게시물 렌더링: 네이티브 <details> */
 .tiptap details {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5em 1em;
-  margin: 0.75em 0;
-  background: var(--background);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0.5em 0;
+  background: transparent;
 }
 
 .tiptap details summary {
   font-weight: 600;
   cursor: pointer;
-  padding: 0.25em 0;
+  padding: 10px 0 10px 26px;
   user-select: none;
+  border-bottom: 1px solid var(--border, #f6f7f9);
+  position: relative;
+  list-style: none;
+}
+
+.tiptap details summary::-webkit-details-marker {
+  display: none;
 }
 
 .tiptap details summary::marker {
-  color: var(--muted-foreground);
+  content: "";
+}
+
+.tiptap details summary::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 5px solid var(--muted-foreground);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+
+.tiptap details[open] > summary::before {
+  transform: translateY(-50%) rotate(90deg);
 }
 
 .tiptap details[open] > *:not(summary) {
-  margin-top: 0.5em;
+  margin-top: 8px;
+  padding-left: 26px;
 }
 
 /* ── YouTube 임베드 ── */
