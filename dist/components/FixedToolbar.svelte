@@ -833,7 +833,7 @@
   {#if has('code-block')}
   <button
     type="button"
-    onclick={() => editor.chain().focus().setCodeBlock({ language: 'cpp' }).run()}
+    onclick={() => editor.chain().focus().setCodeBlock().run()}
     data-tooltip="코드 블록"
     aria-label="코드 블록"
     class={cn(

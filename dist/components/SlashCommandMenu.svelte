@@ -122,7 +122,7 @@
       keywords: "code 코드 블록 cpp c++ python 파이썬",
       icon: Code2,
       command: (editor) =>
-        editor.chain().focus().setCodeBlock({ language: "cpp" }).run(),
+        editor.chain().focus().setCodeBlock().run(),
     },
     {
       feature: "toggle",
