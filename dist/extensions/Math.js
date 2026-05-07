@@ -15,6 +15,7 @@ function renderKatex(latex, displayMode) {
         return katex.renderToString(latex, {
             displayMode,
             throwOnError: false,
+            strict: false,
             output: "html",
         });
     }

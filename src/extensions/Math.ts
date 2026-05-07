@@ -31,6 +31,7 @@ function renderKatex(latex: string, displayMode: boolean): string {
     return katex.renderToString(latex, {
       displayMode,
       throwOnError: false,
+      strict: false,
       output: "html",
     });
   } catch {
