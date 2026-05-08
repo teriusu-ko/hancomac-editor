@@ -40,6 +40,8 @@
     Paperclip,
     Film,
     Columns2,
+    Tv,
+    Palette,
   } from "lucide-svelte";
   import { cn } from "../utils/cn";
   import InputModal from "./InputModal.svelte";
@@ -53,6 +55,7 @@
     onVideoClick,
     onPromptLink,
     onPromptImage,
+    onPromptMbus,
   }: {
     editor: Editor;
     features: Set<ToolbarFeature>;
@@ -61,6 +64,7 @@
     onVideoClick?: () => void;
     onPromptLink?: PromptHandler;
     onPromptImage?: PromptHandler;
+    onPromptMbus?: PromptHandler;
   } = $props();
 
   const has = (f: ToolbarFeature) => features.has(f);
@@ -69,22 +73,44 @@
 
   let codeMenuOpen = $state(false);
   let tableMenuOpen = $state(false);
-  let modalState: { type: "link" | "image" | "cellBg" } | null = $state(null);
+  let colorMenuOpen = $state(false);
+  let colorPickerActive = $state(false);
+  let modalState: { type: "link" | "image" | "cellBg" | "mbus" } | null = $state(null);
   let codeMenuEl: HTMLDivElement | undefined = $state();
   let tableMenuEl: HTMLDivElement | undefined = $state();
+  let colorMenuEl: HTMLDivElement | undefined = $state();
+
+  const TEXT_COLORS = [
+    { label: "기본", value: "" },
+    { label: "검정", value: "#000000" },
+    { label: "회색", value: "#6b7280" },
+    { label: "빨강", value: "#dc2626" },
+    { label: "주황", value: "#ea580c" },
+    { label: "노랑", value: "#ca8a04" },
+    { label: "초록", value: "#16a34a" },
+    { label: "파랑", value: "#2563eb" },
+    { label: "보라", value: "#7c3aed" }
+  ];
 
   $effect(() => {
-    if (!codeMenuOpen && !tableMenuOpen) return;
+    if (!codeMenuOpen && !tableMenuOpen && !colorMenuOpen) return;
     function handleClick(e: MouseEvent) {
       if (codeMenuEl && !codeMenuEl.contains(e.target as Node))
         codeMenuOpen = false;
       if (tableMenuEl && !tableMenuEl.contains(e.target as Node))
         tableMenuOpen = false;
+      if (
+        colorMenuEl &&
+        !colorMenuEl.contains(e.target as Node) &&
+        !colorPickerActive
+      )
+        colorMenuOpen = false;
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         codeMenuOpen = false;
         tableMenuOpen = false;
+        colorMenuOpen = false;
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -264,6 +290,74 @@
   >
     <Subscript size={iconSize} />
   </button>
+  {/if}
+  {#if has('text-color')}
+  <div bind:this={colorMenuEl} class="relative">
+    <button
+      type="button"
+      onclick={() => (colorMenuOpen = !colorMenuOpen)}
+      data-tooltip="글자색"
+      aria-label="글자색"
+      class={cn(
+        "flex items-center gap-0.5 p-1.5 rounded-md transition-colors",
+        editor.getAttributes("textStyle").color
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      )}
+    >
+      <Palette size={iconSize} />
+      <ChevronDown size={12} />
+    </button>
+    {#if colorMenuOpen}
+      <div
+        class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 p-2"
+        style="min-width: 180px"
+      >
+        <div class="grid grid-cols-3 gap-1.5">
+          {#each TEXT_COLORS as c}
+            <button
+              type="button"
+              title={c.label}
+              class="h-8 rounded-md border border-border transition-transform hover:scale-105 flex items-center justify-center text-xs font-bold"
+              style="color: {c.value || '#000'}"
+              onclick={() => {
+                if (c.value) {
+                  editor.chain().focus().setColor(c.value).run();
+                } else {
+                  editor.chain().focus().unsetColor().run();
+                }
+                colorMenuOpen = false;
+              }}
+            >
+              {c.value ? "A" : "×"}
+            </button>
+          {/each}
+        </div>
+        <label
+          class="mt-2 flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+        >
+          <span>직접 선택</span>
+          <input
+            type="color"
+            class="h-6 w-10 cursor-pointer rounded border border-border bg-transparent p-0"
+            value={(editor.getAttributes("textStyle").color as string) || "#000000"}
+            onpointerdown={() => (colorPickerActive = true)}
+            onclick={(e) => e.stopPropagation()}
+            oninput={(e) => {
+              const v = (e.target as HTMLInputElement).value;
+              editor.chain().focus().setColor(v).run();
+            }}
+            onchange={() => {
+              setTimeout(() => (colorPickerActive = false), 200);
+            }}
+            onblur={() => {
+              setTimeout(() => (colorPickerActive = false), 200);
+            }}
+          />
+        </label>
+      </div>
+    {/if}
+  </div>
   {/if}
 
   </div>
@@ -476,7 +570,7 @@
     </div>
   {/if}
 
-  {#if has('link') || has('image') || has('pdf') || has('youtube') || has('video') || has('file') || has('columns-2') || has('columns-3') || has('table') || has('code-block')}
+  {#if has('link') || has('image') || has('pdf') || has('youtube') || has('video') || has('file') || has('mbus') || has('columns-2') || has('columns-3') || has('table') || has('code-block')}
   <!-- Media & Layout -->
   <div class="hce-toolbar-group">
   {#if has('link')}
@@ -530,6 +624,25 @@
   >
     <Video size={iconSize} />
   </button>
+  {/if}
+  {#if has('mbus')}
+    <button
+      type="button"
+      onclick={async () => {
+        if (onPromptMbus) {
+          const url = await onPromptMbus("");
+          if (!url) return;
+          editor.chain().focus().setMbusVideo({ src: url }).run();
+        } else {
+          modalState = { type: "mbus" };
+        }
+      }}
+      data-tooltip="미디버스 영상"
+      aria-label="미디버스 영상"
+      class="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+    >
+      <Tv size={iconSize} />
+    </button>
   {/if}
   {#if has('video') && onVideoClick}
     <button
@@ -912,6 +1025,17 @@
       placeholder="https://example.com/image.png"
       onConfirm={(url) => {
         editor.chain().focus().setImage({ src: url }).run();
+        modalState = null;
+      }}
+      onCancel={() => (modalState = null)}
+    />
+  {/if}
+  {#if modalState?.type === "mbus"}
+    <InputModal
+      title="미디버스 영상 URL"
+      placeholder="https://play.mbus.tv/v1/hls/..."
+      onConfirm={(url) => {
+        editor.chain().focus().setMbusVideo({ src: url }).run();
         modalState = null;
       }}
       onCancel={() => (modalState = null)}

@@ -2,23 +2,23 @@
 export const TOOLBAR_PRESETS = {
     full: [
         'bold', 'italic', 'underline', 'strike', 'highlight',
-        'superscript', 'subscript', 'code',
+        'superscript', 'subscript', 'code', 'text-color',
         'align-left', 'align-center', 'align-right',
         'h1', 'h2', 'h3',
         'bullet-list', 'ordered-list', 'checklist',
         'blockquote', 'horizontal-rule', 'toggle',
-        'link', 'image', 'pdf', 'youtube', 'video', 'file',
+        'link', 'image', 'pdf', 'youtube', 'video', 'file', 'mbus',
         'columns-2', 'columns-3', 'table', 'code-block',
         'undo', 'redo',
         'fixed-toolbar', 'slash-menu',
         'table-menu', 'character-count', 'upload-overlay'
     ],
     standard: [
-        'bold', 'italic', 'strike', 'code',
+        'bold', 'italic', 'strike', 'code', 'text-color',
         'h1', 'h2', 'h3',
         'bullet-list', 'ordered-list', 'checklist',
         'blockquote', 'horizontal-rule', 'toggle',
-        'link', 'image', 'pdf', 'youtube', 'video', 'file',
+        'link', 'image', 'pdf', 'youtube', 'video', 'file', 'mbus',
         'columns-2', 'columns-3', 'table', 'code-block',
         'fixed-toolbar', 'slash-menu', 'table-menu'
     ],

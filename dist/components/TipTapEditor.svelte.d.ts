@@ -10,6 +10,7 @@ type $$ComponentProps = {
     fileDownloadBaseUrl?: string;
     onPromptLink?: PromptHandler;
     onPromptImage?: PromptHandler;
+    onPromptMbus?: PromptHandler;
     extensions?: AnyExtension[];
     editable?: boolean;
     toolbar?: ToolbarMode;

@@ -11,6 +11,7 @@ export { FixedDetails } from "./extensions/FixedDetails";
 export { FileAttachment } from "./extensions/FileAttachment";
 export type { FileResolver, FileResolveResult } from "./extensions/FileAttachment";
 export { VideoBlock } from "./extensions/VideoBlock";
+export { MbusVideo } from "./extensions/MbusVideo";
 export { Columns } from "./extensions/Columns";
 export { Column } from "./extensions/Column";
 export { MathInline, MathDisplay } from "./extensions/Math";
