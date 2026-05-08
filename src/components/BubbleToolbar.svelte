@@ -20,6 +20,7 @@
     Heading3,
     Type,
     Code,
+    Palette,
   } from "lucide-svelte";
   import { cn } from "../utils/cn";
   import type { ToolbarFeature, PromptHandler } from "../types";
@@ -37,8 +38,21 @@
   const has = (f: ToolbarFeature) => features.has(f);
 
   let showHeadings = $state(false);
+  let showColors = $state(false);
   let menuEl: HTMLDivElement | undefined = $state();
   const iconSize = 14;
+
+  const TEXT_COLORS = [
+    { label: "기본", value: "" },
+    { label: "검정", value: "#000000" },
+    { label: "회색", value: "#6b7280" },
+    { label: "빨강", value: "#dc2626" },
+    { label: "주황", value: "#ea580c" },
+    { label: "노랑", value: "#ca8a04" },
+    { label: "초록", value: "#16a34a" },
+    { label: "파랑", value: "#2563eb" },
+    { label: "보라", value: "#7c3aed" }
+  ];
 
   function getCurrentBlockLabel(): string {
     if (editor.isActive("heading", { level: 1 })) return "제목 1";
@@ -220,6 +234,66 @@
     >
       <Strikethrough size={iconSize} />
     </button>
+    {/if}
+    {#if has('text-color')}
+      <div class="relative">
+        <button
+          type="button"
+          onclick={() => (showColors = !showColors)}
+          title="글자색"
+          aria-label="글자색"
+          class={cn(
+            "p-1.5 rounded-full transition-colors",
+            editor.getAttributes("textStyle").color
+              ? "bg-white/20 text-white"
+              : "text-white/70 hover:text-white hover:bg-white/10",
+          )}
+        >
+          <Palette size={iconSize} />
+        </button>
+        {#if showColors}
+          <div
+            class="absolute bottom-full left-0 mb-1 bg-foreground rounded-lg shadow-xl border border-white/10 p-2"
+            style="min-width: 160px"
+          >
+            <div class="grid grid-cols-3 gap-1.5">
+              {#each TEXT_COLORS as c}
+                <button
+                  type="button"
+                  title={c.label}
+                  class="h-7 rounded-md border border-white/20 transition-transform hover:scale-105 flex items-center justify-center text-xs font-bold bg-white"
+                  style="color: {c.value || '#000'}"
+                  onclick={() => {
+                    if (c.value) {
+                      editor.chain().focus().setColor(c.value).run();
+                    } else {
+                      editor.chain().focus().unsetColor().run();
+                    }
+                    showColors = false;
+                  }}
+                >
+                  {c.value ? "A" : "×"}
+                </button>
+              {/each}
+            </div>
+            <label
+              class="mt-2 flex items-center justify-between gap-2 px-1 text-xs text-white/70 cursor-pointer hover:text-white"
+            >
+              <span>직접 선택</span>
+              <input
+                type="color"
+                class="h-6 w-10 cursor-pointer rounded border border-white/20 bg-transparent p-0"
+                value={(editor.getAttributes("textStyle").color as string) || "#000000"}
+                onclick={(e) => e.stopPropagation()}
+                oninput={(e) => {
+                  const v = (e.target as HTMLInputElement).value;
+                  editor.chain().focus().setColor(v).run();
+                }}
+              />
+            </label>
+          </div>
+        {/if}
+      </div>
     {/if}
     {#if has('highlight')}
       <button

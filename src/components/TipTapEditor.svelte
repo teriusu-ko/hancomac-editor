@@ -37,6 +37,7 @@
   import { Indent } from "../extensions/Indent";
   import { FileAttachment } from "../extensions/FileAttachment";
   import { VideoBlock } from "../extensions/VideoBlock";
+  import { MbusVideo } from "../extensions/MbusVideo";
   import FixedToolbar from "./FixedToolbar.svelte";
   import BubbleToolbar from "./BubbleToolbar.svelte";
   import SlashCommandMenu from "./SlashCommandMenu.svelte";
@@ -116,6 +117,7 @@
     fileDownloadBaseUrl,
     onPromptLink,
     onPromptImage,
+    onPromptMbus,
     extensions: extraExtensions = [],
     editable = true,
     toolbar = 'full',
@@ -129,6 +131,7 @@
     fileDownloadBaseUrl?: string;
     onPromptLink?: PromptHandler;
     onPromptImage?: PromptHandler;
+    onPromptMbus?: PromptHandler;
     extensions?: AnyExtension[];
     editable?: boolean;
     toolbar?: ToolbarMode;
@@ -377,6 +380,7 @@
           ...(fileDownloadBaseUrl ? { downloadBaseUrl: fileDownloadBaseUrl } : {}),
         }),
         VideoBlock,
+        MbusVideo,
         Columns,
         Column,
         CodeBlockTopEscape,
@@ -572,6 +576,7 @@
 			{features}
 			{onPromptLink}
 			{onPromptImage}
+			{onPromptMbus}
 			onPdfClick={() => pdfInputEl?.click()}
 			onFileClick={onUploadFile ? () => fileInputEl?.click() : undefined}
 			onVideoClick={onUploadFile ? () => videoInputEl?.click() : undefined}
