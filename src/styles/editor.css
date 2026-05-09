@@ -677,7 +677,7 @@
 /* ── 컬럼 레이아웃 ── */
 .tiptap div[data-type="columns"] {
   display: grid;
-  gap: 24px;
+  gap: 16px;
   margin: 1em 0;
 }
 
@@ -691,7 +691,7 @@
 
 .tiptap div[data-type="column"] {
   min-width: 0;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border: 1px dashed var(--border);
   border-radius: 8px;
 }
