@@ -251,11 +251,7 @@
   transition: box-shadow 0.15s;
 }
 
-/* ── YouTube / PDF 선택 힌트 ── */
-.tiptap div[data-youtube-video].ProseMirror-selectednode iframe {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
-}
-
+/* ── PDF 선택 힌트 ── */
 .tiptap [data-type="pdfBlock"].ProseMirror-selectednode > div {
   border-radius: 8px;
 }
@@ -399,19 +395,6 @@
   margin-top: 8px;
   padding-left: 26px;
 }
-
-/* ── YouTube 임베드 ── */
-.tiptap div[data-youtube-video] {
-  margin: 1em 0;
-}
-
-.tiptap div[data-youtube-video] iframe {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 8px;
-  border: none;
-}
-
 
 /* ── 테이블 ── */
 .tiptap table {
@@ -579,7 +562,7 @@
   position: relative;
 }
 
-.ProseMirror-selectednode:not(img):not([data-youtube-video]):not([data-type="pdfBlock"])::before,
+.ProseMirror-selectednode:not(img):not([data-type="pdfBlock"])::before,
 .ProseMirror-selectednoderange:not([data-type="pdfBlock"])::before {
   content: "";
   position: absolute;

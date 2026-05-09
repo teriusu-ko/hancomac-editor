@@ -81,12 +81,6 @@ export function transformLegacyHtml(html: string): string {
         /<tiptap-collapsable\s+title="([^"]*)">([\s\S]*?)<\/tiptap-collapsable>/gi,
         '<details><summary>$1</summary><div>$2</div></details>',
       )
-      // <lite-youtube videoid="X" ...></lite-youtube>
-      // → <div data-youtube-video><iframe src="https://www.youtube.com/embed/X" allowfullscreen></iframe></div>
-      .replace(
-        /<lite-youtube\s+videoid="([^"]*)"[^>]*>(?:<\/lite-youtube>)?/gi,
-        '<div data-youtube-video=""><iframe src="https://www.youtube.com/embed/$1" allowfullscreen></iframe></div>',
-      )
       // <embed src="X" type="application/pdf" ...>
       // → <div data-pdf-src="X" data-pdf-name="filename">
       .replace(
