@@ -43,11 +43,16 @@
   margin-top: 0.25em;
 }
 
-/* ── 텍스트 블록 ── */
+/* ── 텍스트 블록 ──
+   Enter(새 paragraph)과 Shift+Enter(<br>)의 시각적 구분을 위해 paragraph 간격을 키운다.
+   - paragraph margin: 0.5em → 두 paragraph 사이 ≈ 0.5em 공백
+   - line-height: 1.5 (br 줄간격) → paragraph 내 줄바꿈은 더 빽빽 */
 .tiptap p {
-  margin: 0.1em 0 !important;
+  margin: 0.5em 0 !important;
   line-height: 1.5 !important;
 }
+.tiptap p:first-child { margin-top: 0 !important; }
+.tiptap p:last-child { margin-bottom: 0 !important; }
 
 /* 빈 단락 — 한 줄 분량 높이 확보.
    `<p></p>`는 inline 콘텐츠가 없어 브라우저가 0 높이로 collapse. min-height로 한 줄 보장.
@@ -210,7 +215,7 @@
   margin: 0.75em 0;
   overflow-x: auto;
   font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  font-size: 0.9em;
+  font-size: 1em;
   line-height: 1.6;
 }
 
