@@ -49,13 +49,13 @@
   line-height: 1.5 !important;
 }
 
-/* 빈 단락 — 시각적으로 "한 줄 띄움" 분량만 차지.
-   CSS :not(br)은 element selector이라 text node를 잡지 못해
-   <p>text<br>text</p> mixed에도 잘못 매칭됨. > br:only-child로 한정. */
+/* 빈 단락 — 한 줄 분량 높이 확보.
+   `<p></p>`는 inline 콘텐츠가 없어 브라우저가 0 높이로 collapse. min-height로 한 줄 보장.
+   line-height는 텍스트 단락(1.5)과 동일하게 유지해야 인접 단락과 높이 불일치/스크롤 점프 없음.
+   1.5em ≈ 25.5px (font-size 17px 기준) — 텍스트 한 줄과 정확히 일치. */
 .tiptap p:empty,
 .tiptap p:has(> br:only-child) {
-  line-height: 0.75em !important;
-  min-height: 0.75em;
+  min-height: 1.5em;
 }
 
 /* 선행 공백 보존 */
