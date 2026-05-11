@@ -79,39 +79,62 @@ export const Indent = Extension.create({
         };
     },
     addKeyboardShortcuts() {
-        const isInCodeBlock = () => this.editor.isActive("codeBlock");
+        // 일반 paragraph/heading: 들여쓰기 문자(\u00a0×4) 커서 위치에 삽입.
+        //   - HTML이 일반 공백을 collapse 하므로 NBSP 사용.
+        // 코드블록: literal \t 삽입 (code:true가 보존).
+        // 리스트 항목: 기본 listItem Tab(sinkListItem)에 위임 (false 반환).
+        const INDENT_NBSP = "\u00a0\u00a0\u00a0\u00a0";
+        const isInListItem = (state) => {
+            const { $from } = state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+                if ($from.node(d).type.name === "listItem")
+                    return true;
+            }
+            return false;
+        };
         return {
             Tab: () => {
-                // 코드블록 안에서는 들여쓰기 문자(\t) 삽입
-                if (isInCodeBlock()) {
-                    return this.editor.commands.insertContent("\t");
-                }
-                return this.editor.commands.indent();
+                const { state, view } = this.editor;
+                if (isInListItem(state))
+                    return false;
+                const inCode = this.editor.isActive("codeBlock");
+                const insert = inCode ? "\t" : INDENT_NBSP;
+                view.dispatch(state.tr.insertText(insert));
+                return true;
             },
             "Shift-Tab": () => {
-                // 코드블록 안: 줄 시작의 \t 또는 앞쪽 공백 1단계 제거
-                if (isInCodeBlock()) {
-                    const { state, view } = this.editor;
-                    const { $from } = state.selection;
-                    const lineStart = $from.start();
-                    const textBefore = state.doc.textBetween(lineStart, $from.pos, "\n");
-                    const lineStartOfCursor = textBefore.lastIndexOf("\n") + 1;
-                    const lineHead = textBefore.slice(lineStartOfCursor);
-                    const cursorAbsLineStart = $from.pos - lineHead.length;
-                    let removeLen = 0;
+                const { state, view } = this.editor;
+                if (isInListItem(state))
+                    return false;
+                const inCode = this.editor.isActive("codeBlock");
+                const { $from } = state.selection;
+                const parentStart = $from.start();
+                const textBefore = state.doc.textBetween(parentStart, $from.pos, "\n");
+                const lastNl = textBefore.lastIndexOf("\n");
+                const lineHead = textBefore.slice(lastNl + 1);
+                const cursorAbsLineStart = $from.pos - lineHead.length;
+                let removeLen = 0;
+                if (inCode) {
                     if (lineHead.startsWith("\t"))
                         removeLen = 1;
+                    else if (lineHead.startsWith("    "))
+                        removeLen = 4;
                     else if (lineHead.startsWith("  "))
                         removeLen = 2;
                     else if (lineHead.startsWith(" "))
                         removeLen = 1;
-                    if (!removeLen)
-                        return true;
-                    const tr = state.tr.delete(cursorAbsLineStart, cursorAbsLineStart + removeLen);
-                    view.dispatch(tr);
-                    return true;
                 }
-                return this.editor.commands.outdent();
+                else {
+                    // 일반 문단: 줄 머리의 NBSP 4개 또는 1개 제거
+                    if (lineHead.startsWith(INDENT_NBSP))
+                        removeLen = 4;
+                    else if (lineHead.startsWith("\u00a0"))
+                        removeLen = 1;
+                }
+                if (!removeLen)
+                    return true; // Tab 포커스 이탈 방지
+                view.dispatch(state.tr.delete(cursorAbsLineStart, cursorAbsLineStart + removeLen));
+                return true;
             },
         };
     },

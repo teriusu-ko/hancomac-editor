@@ -75,4 +75,44 @@ describe('Indent extension', () => {
         const para = doc.content?.[0];
         expect(para?.attrs?.indent).toBe(2);
     });
+    function pressKey(key, shift = false) {
+        const view = editor.view;
+        const event = new KeyboardEvent('keydown', {
+            key,
+            code: key === 'Tab' ? 'Tab' : key,
+            shiftKey: shift,
+            bubbles: true,
+            cancelable: true
+        });
+        view.dom.dispatchEvent(event);
+        return event;
+    }
+    it('Tab in paragraph inserts NBSP indentation at cursor', () => {
+        createEditor('<p>Hello</p>');
+        editor.commands.focus('end');
+        pressKey('Tab');
+        const text = editor.state.doc.firstChild?.textContent ?? '';
+        expect(text).toBe('Hello\u00a0\u00a0\u00a0\u00a0');
+    });
+    it('Tab in codeBlock inserts literal tab', () => {
+        createEditor('<pre><code>line</code></pre>');
+        editor.commands.focus('end');
+        pressKey('Tab');
+        const text = editor.state.doc.firstChild?.textContent ?? '';
+        expect(text).toBe('line\t');
+    });
+    it('Shift-Tab in paragraph removes NBSP indentation at line start', () => {
+        createEditor('<p>\u00a0\u00a0\u00a0\u00a0Hello</p>');
+        editor.commands.focus(5); // 4 NBSP 다음
+        pressKey('Tab', true);
+        const text = editor.state.doc.firstChild?.textContent ?? '';
+        expect(text).toBe('Hello');
+    });
+    it('Shift-Tab in codeBlock removes leading tab', () => {
+        createEditor('<pre><code>\tline</code></pre>');
+        editor.commands.focus(2); // tab 다음
+        pressKey('Tab', true);
+        const text = editor.state.doc.firstChild?.textContent ?? '';
+        expect(text).toBe('line');
+    });
 });
