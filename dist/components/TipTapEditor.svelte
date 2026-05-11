@@ -265,6 +265,17 @@
     const { state } = editor;
     const { from } = state.selection;
     const resolvedPos = state.doc.resolve(from);
+    // 코드블록/inline code 안에서는 슬래시 메뉴를 띄우지 않는다.
+    // C++ 주석(`//`)·파이썬 path 등 코드의 정상 문자가 슬래시 트리거가 되는 걸 방지.
+    const parentType = resolvedPos.parent?.type?.name;
+    if (parentType === "codeBlock") {
+      if (slashMenuOpen) {
+        slashMenuOpen = false;
+        slashStartPos = null;
+        slashQuery = "";
+      }
+      return;
+    }
     const lineStart = resolvedPos.start();
     const lineText = state.doc.textBetween(lineStart, from, "\n");
 
