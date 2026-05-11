@@ -449,10 +449,11 @@
       content: transformLegacyHtml(content),
       editable,
       onUpdate: ({ editor: e }) => {
+        // 빈 paragraph는 <p></p>로 저장 (ProseMirror가 편집기 DOM에 넣는 trailing <br>는 출력에서 제거).
         const html = e
           .getHTML()
-          .replace(/(<p><br\s*\/?><\/p>\s*)+$/, "")
-          .replace(/<p><\/p>/g, "<p><br></p>");
+          .replace(/<p><br\s*\/?><\/p>/g, "<p></p>")
+          .replace(/(<p><\/p>\s*)+$/, "");
         lastEmittedHtml = html;
         onChange(html);
       },
